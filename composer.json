@@ -1,0 +1,21 @@
+{
+    "name": "poirot/view",
+    "description": "Render Response Views.",
+    "type"       : "library",
+    "authors": [
+        {
+            "name": "Payam Naderi",
+            "email": "naderi.payam@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "poirot/core": "dev-master"
+    },
+    "target-dir": "Poirot/View",
+    "autoload"  : {
+        "psr-0": {
+            "Poirot\\View": "."
+        }
+    }
+}
