@@ -107,9 +107,8 @@ abstract class AbstractViewModel implements iViewModel
      * $closure
      * this closure will bind to this view model
      * function($renderResult) {
-     *    # $renderResult is render result of
-     *    # $viewModel that we want inject into
-     *    # $this viewModel with this closure
+     *    # $renderResult is render result of $viewModel
+     *    # this closure Bind To $viewModel, so we can access with this
      * }
      *
      * @param iViewModel $viewModel
