@@ -7,6 +7,20 @@ class TextViewModel extends AbstractViewModel
     protected $content;
 
     /**
+     * Render View Model
+     *
+     * - render bind view models first
+     *
+     * @return string
+     */
+    function render()
+    {
+        parent::render();
+
+        return $this->getContent();
+    }
+
+    /**
      * Get Content
      *
      * @return string

@@ -3,7 +3,9 @@ namespace Poirot\View;
 
 use Poirot\Core\BuilderSetterTrait;
 use Poirot\Core\SplPriorityQueue;
+use Poirot\View\Interfaces\iInterpreterModel;
 use Poirot\View\Interfaces\iViewModel;
+use Poirot\View\Interfaces\Respec\iMInterpreterProvider;
 
 abstract class AbstractViewModel implements iViewModel
 {
@@ -14,6 +16,8 @@ abstract class AbstractViewModel implements iViewModel
 
     /** @var SplPriorityQueue */
     protected $queue;
+
+    protected $__startRender = false;
 
     /**
      * Construct
@@ -37,7 +41,10 @@ abstract class AbstractViewModel implements iViewModel
      */
      function render()
      {
-         $render = '';
+         if ($this->__startRender)
+             return '';
+
+         $this->__startRender = true;
 
          # Render Bind View Models To Self
          ## view models can access self and inject render
@@ -57,10 +64,12 @@ abstract class AbstractViewModel implements iViewModel
          }
          $this->queue = $curQueue;
 
+         $this->__startRender = false;
+
          # Then Render Self ...
          ## ... implement on extend classes
 
-         return $render;
+         return '';
      }
 
     /**
