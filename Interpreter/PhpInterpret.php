@@ -2,7 +2,7 @@
 namespace Poirot\View\Interpreter;
 
 use Poirot\Loader\Interfaces\iLoader;
-use Poirot\Loader\ResourceMapLoader;
+use Poirot\Loader\PathStackLoader;
 use Poirot\View\Interfaces\iInterpreterModel;
 use Poirot\View\Interfaces\iPermutationViewModel;
 use Poirot\View\Interfaces\iViewModel;
@@ -18,6 +18,9 @@ class PhpInterpret implements iInterpreterModel
     // interpret tmp variables
     protected $__template;
     protected $__result;
+
+    /** @var string Default Template File Extension */
+    protected $templateExt = 'phtml';
 
     // Implement Interpreter:
 
@@ -69,15 +72,35 @@ class PhpInterpret implements iInterpreterModel
      */
     function interpret()
     {
+        $ext = $this->getTemplateExt();
         $this->__template = $this->_viewModel->getTemplate();
-        if (!is_file($this->__template))
-            $this->__template = $this->resolver($this->__template);
+        $this->__tmp      = explode('.', $this->__template);
+        if ( end($this->__tmp) == $ext )
+            throw new \Exception(sprintf(
+                'File Template Must Not Contain File Extension; for (%s).'
+                , $this->__template
+            ));
+
+        if (!is_file($this->__template.'.'.$ext))
+            ## resolve to template file path from name
+            $this->__template = $this->resolver()->resolve(
+                $this->__template
+                , function(&$resolved) use ($ext) {
+                    if (file_exists($resolved.'.'.$ext)) {
+                        ### return instance file path
+                        $resolved .= '.'.$ext;
+                        ### stop propagation and get resolved template file path
+                        return true;
+                    }
+                }
+            );
 
         if (!is_readable($this->__template))
             throw new \RuntimeException(sprintf(
                 'Can`t Achieve Template File For (%s).'
-                , $this->__template
+                , implode('.', $this->__tmp)
             ));
+
 
         // TODO Isolated Embed Code to render file
 
@@ -87,7 +110,7 @@ class PhpInterpret implements iInterpreterModel
         {
             ob_start();
             include $this->__template;
-            $this->__result = ob_get_contents();
+            $this->__result = ob_get_clean();
         }
         catch (\Exception $e)
         {
@@ -99,6 +122,30 @@ class PhpInterpret implements iInterpreterModel
     }
 
     // Implement PhpInterpret Specific
+
+    /**
+     * Set Template File Extension
+     *
+     * @param string $ext
+     *
+     * @return $this
+     */
+    function setTemplateExt($ext)
+    {
+        $this->templateExt = $ext;
+
+        return $this;
+    }
+
+    /**
+     * Get Template File Extension
+     *
+     * @return string
+     */
+    function getTemplateExt()
+    {
+        return $this->templateExt;
+    }
 
     /**
      * Set Template Resolver
@@ -117,12 +164,12 @@ class PhpInterpret implements iInterpreterModel
     /**
      * Template Resolver
      *
-     * @return iLoader|ResourceMapLoader
+     * @return iLoader|PathStackLoader
      */
     function resolver()
     {
         if (!$this->resolver)
-            $this->resolver = new ResourceMapLoader;
+            $this->resolver = new PathStackLoader;
 
         return $this->resolver;
     }
