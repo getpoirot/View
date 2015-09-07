@@ -15,7 +15,7 @@ namespace Poirot\View\Interpreter;
  * [/code]
  *
  */
-class IsoRenderer 
+class IsoRenderer
 {
     /**
      * Capture Included File Into This Object

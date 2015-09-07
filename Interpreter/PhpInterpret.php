@@ -187,7 +187,7 @@ class PhpInterpret implements iInterpreterModel
     function resolver()
     {
         if (!$this->resolver)
-            $this->resolver = new PathStackLoader;
+            $this->setResolver(new PathStackLoader);
 
         return $this->resolver;
     }
