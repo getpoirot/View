@@ -75,25 +75,30 @@ class PhpInterpret implements iInterpreterModel
         $ext = $this->getTemplateExt();
         $this->__template = $this->_viewModel->getTemplate();
         $this->__tmp      = explode('.', $this->__template);
-        if ( end($this->__tmp) == $ext )
-            throw new \Exception(sprintf(
-                'File Template Must Not Contain File Extension; for (%s).'
-                , $this->__template
-            ));
 
-        if (!is_file($this->__template.'.'.$ext))
-            ## resolve to template file path from name
-            $this->__template = $this->resolver()->resolve(
-                $this->__template
-                , function(&$resolved) use ($ext) {
-                    if (file_exists($resolved.'.'.$ext)) {
-                        ### return instance file path
-                        $resolved .= '.'.$ext;
-                        ### stop propagation and get resolved template file path
-                        return true;
+        if (!is_file($this->__template)) {
+            ### We can set direct file path as template with extension included
+
+            if ( end($this->__tmp) == $ext )
+                throw new \Exception(sprintf(
+                    'File Template Must Not Contain File Extension; for (%s).'
+                    , $this->__template
+                ));
+
+            if (!is_file($this->__template.'.'.$ext))
+                ## resolve to template file path from name
+                $this->__template = $this->resolver()->resolve(
+                    $this->__template
+                    , function(&$resolved) use ($ext) {
+                        if (file_exists($resolved.'.'.$ext)) {
+                            ### return instance file path
+                            $resolved .= '.'.$ext;
+                            ### stop propagation and get resolved template file path
+                            return true;
+                        }
                     }
-                }
-            );
+                );
+        }
 
         if (!is_readable($this->__template))
             throw new \RuntimeException(sprintf(
