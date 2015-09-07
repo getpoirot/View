@@ -14,13 +14,12 @@ class PhpInterpret implements iInterpreterModel
     protected $_viewModel;
     /** @var iLoader */
     protected $resolver;
-
-    // interpret tmp variables
-    protected $__template;
-    protected $__result;
+    /** @var IsoRenderer */
+    protected $renderer;
 
     /** @var string Default Template File Extension */
     protected $templateExt = 'phtml';
+
 
     // Implement Interpreter:
 
@@ -73,22 +72,22 @@ class PhpInterpret implements iInterpreterModel
     function interpret()
     {
         $ext = $this->getTemplateExt();
-        $this->__template = $this->_viewModel->getTemplate();
-        $this->__tmp      = explode('.', $this->__template);
+        $__template = $this->_viewModel->getTemplate();
+        $__tmp      = explode('.', $__template);
 
-        if (!is_file($this->__template)) {
+        if (!is_file($__template)) {
             ### We can set direct file path as template with extension included
 
-            if ( end($this->__tmp) == $ext )
+            if ( end($__tmp) == $ext )
                 throw new \Exception(sprintf(
                     'File Template Must Not Contain File Extension; for (%s).'
-                    , $this->__template
+                    , $__template
                 ));
 
-            if (!is_file($this->__template.'.'.$ext))
+            if (!is_file($__template.'.'.$ext))
                 ## resolve to template file path from name
-                $this->__template = $this->resolver()->resolve(
-                    $this->__template
+                $__template = $this->resolver()->resolve(
+                    $__template
                     , function(&$resolved) use ($ext) {
                         if (file_exists($resolved.'.'.$ext)) {
                             ### return instance file path
@@ -100,30 +99,17 @@ class PhpInterpret implements iInterpreterModel
                 );
         }
 
-        if (!is_readable($this->__template))
+        if (!is_readable($__template))
             throw new \RuntimeException(sprintf(
                 'Can`t Achieve Template File For (%s).'
-                , implode('.', $this->__tmp)
+                , implode('.', $__tmp)
             ));
 
+        ## Render Into Variable:
+        $vars = $this->_viewModel->variables()->toArray();
+        $__result = $this->renderer()->capture($__template, $vars);
 
-        // TODO Isolated Embed Code to render file
-
-        extract($this->_viewModel->variables()->toArray());
-
-        try
-        {
-            ob_start();
-            include $this->__template;
-            $this->__result = ob_get_clean();
-        }
-        catch (\Exception $e)
-        {
-            ob_end_clean();
-            throw $e;
-        }
-
-        return $this->__result;
+        return $__result;
     }
 
     // Implement PhpInterpret Specific
@@ -150,6 +136,33 @@ class PhpInterpret implements iInterpreterModel
     function getTemplateExt()
     {
         return $this->templateExt;
+    }
+
+    /**
+     * Set Iso Renderer
+     *
+     * @param IsoRenderer $renderer
+     *
+     * @return $this
+     */
+    function setRenderer(IsoRenderer $renderer)
+    {
+        $this->renderer = $renderer;
+
+        return $this;
+    }
+
+    /**
+     * Get Iso Renderer
+     *
+     * @return IsoRenderer
+     */
+    function renderer()
+    {
+        if (!$this->renderer)
+            $this->setRenderer(new IsoRenderer);
+
+        return $this->renderer;
     }
 
     /**
