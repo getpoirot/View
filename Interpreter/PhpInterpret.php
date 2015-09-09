@@ -2,13 +2,18 @@
 namespace Poirot\View\Interpreter;
 
 use Poirot\Loader\Interfaces\iLoader;
+use Poirot\Loader\Interfaces\iLoaderAware;
+use Poirot\Loader\Interfaces\iLoaderProvider;
 use Poirot\Loader\PathStackLoader;
 use Poirot\View\Interfaces\iInterpreterModel;
 use Poirot\View\Interfaces\iPermutationViewModel;
 use Poirot\View\Interfaces\iViewModel;
 use Poirot\View\PermutationViewModel;
 
-class PhpInterpret implements iInterpreterModel
+class PhpInterpret
+    implements iInterpreterModel
+    , iLoaderAware
+    , iLoaderProvider
 {
     /** @var PermutationViewModel */
     protected $_viewModel;
@@ -182,7 +187,7 @@ class PhpInterpret implements iInterpreterModel
     /**
      * Template Resolver
      *
-     * @return iLoader|PathStackLoader
+     * @return PathStackLoader|iLoader
      */
     function resolver()
     {
