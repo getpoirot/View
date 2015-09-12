@@ -1,5 +1,6 @@
 <?php
 namespace Poirot\View\Interpreter;
+use Poirot\Core\Traits\OpenCall;
 
 /**
  * All isolated render area must extend this class
@@ -17,6 +18,8 @@ namespace Poirot\View\Interpreter;
  */
 class IsoRenderer
 {
+    use OpenCall;
+
     /**
      * Capture Included File Into This Object
      *
