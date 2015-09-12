@@ -137,7 +137,6 @@ class TwoStepInterpreter implements iInterpreterModel
             $interpreter->setRenderer($this->__getLayerRenderer());
 
             ## same template resolver as base
-            // TODO achieve last resolved path
             if (($baseInterpreter = $this->getBaseInterpreter()) instanceof iLoaderProvider)
                 $interpreter->setResolver($baseInterpreter->resolver());
 
