@@ -1,6 +1,7 @@
 <?php
 namespace Poirot\View\Interpreter;
 use Poirot\Core\Traits\OpenCall;
+use Poirot\View\Exception\TemplateNotFoundException;
 
 /**
  * All isolated render area must extend this class
@@ -40,7 +41,7 @@ class IsoRenderer
         }
 
         if(!is_readable($include))
-            throw new \Exception(sprintf('Cant include (%s).', $include));
+            throw new TemplateNotFoundException(sprintf('Cant include (%s).', $include));
 
         extract($vars);
 
