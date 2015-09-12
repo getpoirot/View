@@ -5,6 +5,7 @@ use Poirot\Loader\Interfaces\iLoader;
 use Poirot\Loader\Interfaces\iLoaderAware;
 use Poirot\Loader\Interfaces\iLoaderProvider;
 use Poirot\Loader\PathStackLoader;
+use Poirot\View\Exception\TemplateNotFoundException;
 use Poirot\View\Interfaces\iInterpreterModel;
 use Poirot\View\Interfaces\iPermutationViewModel;
 use Poirot\View\Interfaces\iViewModel;
@@ -76,7 +77,7 @@ class PhpInterpret
      */
     function interpret()
     {
-        $ext = $this->getTemplateExt();
+        $ext = $this->getFileExt();
         $__template = $this->_viewModel->getTemplate();
         $__tmp      = explode('.', $__template);
 
@@ -104,15 +105,14 @@ class PhpInterpret
                 );
         }
 
-        if (!is_readable($__template))
-            throw new \RuntimeException(sprintf(
-                'Can`t Achieve Template File For (%s).'
-                , implode('.', $__tmp)
-            ));
-
         ## Render Into Variable:
         $vars = $this->_viewModel->variables()->toArray();
-        $__result = $this->renderer()->capture($__template, $vars);
+        $renderer = $this->renderer();
+        if ($renderer instanceof \Closure) {
+            $renderer->bindTo($this);
+            $__result = $renderer($__template, $vars);
+        } else
+            $__result = $renderer->capture($__template, $vars);
 
         return $__result;
     }
@@ -126,7 +126,7 @@ class PhpInterpret
      *
      * @return $this
      */
-    function setTemplateExt($ext)
+    function setFileExt($ext)
     {
         $this->templateExt = $ext;
 
@@ -138,7 +138,7 @@ class PhpInterpret
      *
      * @return string
      */
-    function getTemplateExt()
+    function getFileExt()
     {
         return $this->templateExt;
     }
@@ -146,12 +146,22 @@ class PhpInterpret
     /**
      * Set Iso Renderer
      *
-     * @param IsoRenderer $renderer
+     * Closure Renderer:
+     * - function($template, $vars)
+     * - closure bind to Self Interpreter Object
+     *
+     * @param IsoRenderer|\Closure $renderer
      *
      * @return $this
      */
-    function setRenderer(IsoRenderer $renderer)
+    function setRenderer($renderer)
     {
+        if (!$renderer instanceof IsoRenderer && !$renderer instanceof \Closure)
+            throw new \InvalidArgumentException(sprintf(
+                'Renderer must extend of (IsoRenderer) or Closure function. given: (%s)'
+                , \Poirot\Core\flatten($renderer)
+            ));
+
         $this->renderer = $renderer;
 
         return $this;
