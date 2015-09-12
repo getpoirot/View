@@ -5,14 +5,17 @@ use Poirot\Loader\Interfaces\iLoader;
 use Poirot\Loader\Interfaces\iLoaderAware;
 use Poirot\Loader\Interfaces\iLoaderProvider;
 use Poirot\Loader\PathStackLoader;
-use Poirot\View\Exception\TemplateNotFoundException;
 use Poirot\View\Interfaces\iInterpreterModel;
 use Poirot\View\Interfaces\iPermutationViewModel;
 use Poirot\View\Interfaces\iViewModel;
+use Poirot\View\Interfaces\Respec\iMRendererAware;
+use Poirot\View\Interfaces\Respec\iMRendererProvider;
 use Poirot\View\PermutationViewModel;
 
 class PhpInterpret
     implements iInterpreterModel
+    , iMRendererAware
+    , iMRendererProvider
     , iLoaderAware
     , iLoaderProvider
 {

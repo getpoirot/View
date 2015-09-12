@@ -5,6 +5,7 @@ use Poirot\Loader\Interfaces\iLoaderProvider;
 use Poirot\View\Interfaces\iInterpreterModel;
 use Poirot\View\Interfaces\iPermutationViewModel;
 use Poirot\View\Interfaces\iViewModel;
+use Poirot\View\Interfaces\Respec\iMRendererProvider;
 use Poirot\View\PermutationViewModel;
 
 /*
@@ -148,31 +149,52 @@ class TwoStepInterpreter implements iInterpreterModel
         return $this->layeredInterpreter;
     }
 
+    /**
+     * Layer Renderer is a closure that bind to interpreter-
+     * or renderer of interpreter if implemented.
+     *
+     * - all new defined or manipulated variables inside layer stage-
+     *   will replaced with variables of base view model.
+     * - also cause of bind we have access to all interpreter or renderer-
+     *   methods and variables.
+     *
+     * @return callable
+     */
     protected function __getLayerRenderer()
     {
         // Layer just manipulate ViewModel by Binding to Object
-        $renderer = function($__template, $vars) {
+        $_l__baseViewModel = $this->_viewModel;
+        $renderer  = function($_l__template, $__vars) use ($_l__baseViewModel)
+        {
             /** $this PermutationViewModel */
-            if (!file_exists($__template))
+            if (!file_exists($_l__template))
                 ## the layered is optional and can be avoided.
                 return;
 
-            extract($vars);
+            # render preLayer
+            extract($__vars);
+            unset($__vars);
 
             try {
                 ob_start();
-                include $__template;
+                include $_l__template;
                 ob_get_clean();
-            }
-            catch (\Exception $e) {
+            } catch (\Exception $e) {
                 ob_end_clean();
                 throw $e;
             }
 
-            // result is not mandatory
+            # set manipulated and new defined variables again
+            $_l__baseViewModel->variables()->from(get_defined_vars());
         };
 
-        $renderer = $renderer->bindTo($this->_viewModel);
+        if ($this->getBaseInterpreter() instanceof iMRendererProvider)
+            ## Bind Layer Into Renderer
+            $renderer = $renderer->bindTo($this->getBaseInterpreter()->renderer());
+        else
+            ## Bind Into Interpreter
+            $renderer = $renderer->bindTo($this->getBaseInterpreter());
+
         return $renderer;
     }
 }
