@@ -21,33 +21,46 @@ class IsoRenderer
 {
     use OpenCall;
 
+    protected $_curr__captureVars = null;
+
     /**
      * Capture Included File Into This Object
      *
-     * @param string $include File Path To Include
+     * !! use absolute file path
+     *
+     * @param string $absFilePath File Path To Include
      * @param array $vars
      *
      * @throws \Exception
      * @return string
      */
-    function capture($include, array $vars = [])
+    function capture($absFilePath, array $vars = [])
     {
-        if (!file_exists($include)) {
+        // ability to call capture method again within included file-
+        // with parent/first call variables
+        if ($this->_curr__captureVars === null)
+            $this->_curr__captureVars = $vars;
+        else
+            (!empty($vars)) ?: $vars = $this->_curr__captureVars;
+
+        if (!file_exists($absFilePath)) {
             ## look for called script backtrace
             $backTrace = debug_backtrace()[0];
-            if (isset($backTrace['file']))
+            if (isset($backTrace['file'])) {
                 ## [dirname:/var/www/html/error/]general.php
-                $include = dirname($backTrace['file']).'/'.trim($include, '/');
+                $tInclude = dirname($backTrace['file']).'/'.trim($absFilePath, '/');
+                (!is_file($tInclude)) ?: $absFilePath = $tInclude;
+            }
         }
 
-        if(!is_readable($include))
-            throw new TemplateNotFoundException(sprintf('Cant include (%s).', $include));
+        if(!is_file($absFilePath) || !is_readable($absFilePath))
+            throw new TemplateNotFoundException(sprintf('Cant include (%s).', $absFilePath));
 
         extract($vars);
 
         try {
             ob_start();
-            include $include;
+            include $absFilePath;
             $result = ob_get_clean();
         }
         catch (\Exception $e) {
