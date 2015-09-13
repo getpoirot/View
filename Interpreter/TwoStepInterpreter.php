@@ -129,19 +129,17 @@ class TwoStepInterpreter implements iInterpreterModel
      */
     function getLayeredInterpreter()
     {
-        if (!$this->layeredInterpreter) {
-            $interpreter = new PhpInterpret;
+        $interpreter = new PhpInterpret;
 
-            # base layer setup
-            $interpreter->setFileExt('php');
-            $interpreter->setRenderer($this->__getLayerRenderer());
+        # base layer setup
+        $interpreter->setFileExt('php');
+        $interpreter->setRenderer($this->__getLayerRenderer());
 
-            ## same template resolver as base
-            if (($baseInterpreter = $this->getBaseInterpreter()) instanceof iLoaderProvider)
-                $interpreter->setResolver($baseInterpreter->resolver());
+        ## same template resolver as base
+        if (($baseInterpreter = $this->getBaseInterpreter()) instanceof iLoaderProvider)
+            $interpreter->setResolver($baseInterpreter->resolver());
 
-            $this->layeredInterpreter = $interpreter;
-        }
+        $this->layeredInterpreter = $interpreter;
 
         $this->layeredInterpreter->setViewModel($this->_viewModel);
 
