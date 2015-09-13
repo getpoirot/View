@@ -93,9 +93,9 @@ class PhpInterpret
                     , $__template
                 ));
 
-            if (!is_file($__template.'.'.$ext))
+            if (!is_file($__template.'.'.$ext)) {
                 ## resolve to template file path from name
-                $__template = $this->resolver()->resolve(
+                $_t_template = $this->resolver()->resolve(
                     $__template
                     , function(&$resolved) use ($ext) {
                         if (file_exists($resolved.'.'.$ext)) {
@@ -106,6 +106,13 @@ class PhpInterpret
                         }
                     }
                 );
+
+                ## only if file resolved
+                ($_t_template === false) ?: $__template = $_t_template;
+            }
+
+            ## Note:
+            ### if file not resolved let it handle within renderer
         }
 
         ## Render Into Variable:
@@ -114,8 +121,9 @@ class PhpInterpret
         if ($renderer instanceof \Closure) {
             $renderer->bindTo($this);
             $__result = $renderer($__template, $vars);
-        } else
+        } else {
             $__result = $renderer->capture($__template, $vars);
+        }
 
         return $__result;
     }

@@ -6,6 +6,8 @@ interface iMTemplateProvider
     /**
      * Get Template
      *
+     * - default, not set value is always empty
+     *
      * @return mixed
      */
     function getTemplate();
