@@ -1,5 +1,6 @@
 <?php
 namespace Poirot\View\Interpreter;
+
 use Poirot\Core\Traits\OpenCall;
 use Poirot\View\Exception\TemplateNotFoundException;
 

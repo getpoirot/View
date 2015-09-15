@@ -147,6 +147,19 @@ class TwoStepInterpreter implements iInterpreterModel
     }
 
     /**
+     * Forward Proxy call to BaseInterpreter
+     * @param $method
+     * @param $args
+     *
+     * @return mixed
+     */
+    function __call($method, $args)
+    {
+        return call_user_func_array([$this->getBaseInterpreter(), $method], $args);
+    }
+
+
+    /**
      * Layer Renderer is a closure that bind to interpreter-
      * or renderer of interpreter if implemented.
      *
