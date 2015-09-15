@@ -176,8 +176,16 @@ class TwoStepInterpreter implements iInterpreterModel
         $_l__baseViewModel = $this->_viewModel;
         $renderer  = function($_l__template, $__vars) use ($_l__baseViewModel)
         {
+            ## hide variables from scope
+            $this->_l__template = $_l__template;
+            unset($_l__template);
+
+            $this->_l__baseViewModel = $_l__baseViewModel;
+            unset($_l__baseViewModel);
+
+
             /** $this PermutationViewModel */
-            if (!file_exists($_l__template))
+            if (!file_exists($this->_l__template))
                 ## the layered is optional and can be avoided.
                 return;
 
@@ -187,7 +195,7 @@ class TwoStepInterpreter implements iInterpreterModel
 
             try {
                 ob_start();
-                include $_l__template;
+                include $this->_l__template;
                 ob_get_clean();
             } catch (\Exception $e) {
                 ob_end_clean();
@@ -195,7 +203,9 @@ class TwoStepInterpreter implements iInterpreterModel
             }
 
             # set manipulated and new defined variables again
-            $_l__baseViewModel->variables()->from(get_defined_vars());
+            $this->_l__baseViewModel->variables()->from(get_defined_vars());
+            unset($this->_l__baseViewModel);
+            unset($this->_l__template);
         };
 
         if ($this->getBaseInterpreter() instanceof iMRendererProvider)
