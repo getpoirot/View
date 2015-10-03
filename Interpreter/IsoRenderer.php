@@ -1,7 +1,7 @@
 <?php
 namespace Poirot\View\Interpreter;
 
-use Poirot\Core\Traits\OpenCall;
+use Poirot\Core\Traits\OpenCallTrait;
 use Poirot\View\Exception\TemplateNotFoundException;
 
 /**
@@ -20,7 +20,7 @@ use Poirot\View\Exception\TemplateNotFoundException;
  */
 class IsoRenderer
 {
-    use OpenCall;
+    use OpenCallTrait;
 
     protected $_curr__captureVars = null;
 

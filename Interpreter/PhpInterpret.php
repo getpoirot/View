@@ -94,6 +94,7 @@ class PhpInterpret
                 ));
 
             if (!is_file($__template.'.'.$ext)) {
+                $resolved = false;
                 ## resolve to template file path from name
                 $_t_template = $this->resolver()->resolve(
                     $__template
@@ -102,8 +103,9 @@ class PhpInterpret
                             ### return instance file path
                             $resolved .= '.'.$ext;
                             ### stop propagation and get resolved template file path
-                            return true;
+                            return $resolved;
                         }
+                        return false;
                     }
                 );
 
