@@ -52,6 +52,7 @@ abstract class AbstractViewModel implements iViewModel
          $curQueue = clone $this->queue;
          foreach($this->queue as $vc) {
              ## bind closure to this object
+
              $this->queue->remove($vc);
 
              $closure   = $vc[1];
