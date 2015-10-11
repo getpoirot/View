@@ -4,7 +4,7 @@ namespace Poirot\View\Interpreter;
 use Poirot\Loader\Interfaces\iLoader;
 use Poirot\Loader\Interfaces\iLoaderAware;
 use Poirot\Loader\Interfaces\iLoaderProvider;
-use Poirot\Loader\PathStackLoader;
+use Poirot\Loader\PathStackResolver;
 use Poirot\View\Interfaces\iInterpreterModel;
 use Poirot\View\Interfaces\iPermutationViewModel;
 use Poirot\View\Interfaces\iViewModel;
@@ -210,12 +210,12 @@ class PhpInterpret
     /**
      * Template Resolver
      *
-     * @return PathStackLoader|iLoader
+     * @return PathStackResolver|iLoader
      */
     function resolver()
     {
         if (!$this->resolver)
-            $this->setResolver(new PathStackLoader);
+            $this->setResolver(new PathStackResolver);
 
         return $this->resolver;
     }
