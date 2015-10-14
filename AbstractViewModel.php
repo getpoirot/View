@@ -3,9 +3,7 @@ namespace Poirot\View;
 
 use Poirot\Core\BuilderSetterTrait;
 use Poirot\Core\SplPriorityQueue;
-use Poirot\View\Interfaces\iInterpreterModel;
 use Poirot\View\Interfaces\iViewModel;
-use Poirot\View\Interfaces\Respec\iMInterpreterProvider;
 
 abstract class AbstractViewModel implements iViewModel
 {
@@ -131,4 +129,3 @@ abstract class AbstractViewModel implements iViewModel
         return $this;
     }
 }
- 
