@@ -38,6 +38,7 @@ abstract class AbstractViewModel implements iViewModel
      * - render bind view models first
      *
      * @return string
+     * @throws \Exception
      */
      function render()
      {
@@ -60,8 +61,14 @@ abstract class AbstractViewModel implements iViewModel
 
              /** @var iViewModel $viewModel */
              $viewModel = $vc[0];
-             $vResult   = $viewModel->render();
-             $closure($vResult);
+             try {
+                 $vResult   = $viewModel->render();
+                 $closure($vResult);
+             } catch (\Exception $e) {
+                 ## set render flag to false, render job is done
+                 $this->__startRender = false;
+                 throw $e;
+             }
          }
          $this->queue = $curQueue;
 
