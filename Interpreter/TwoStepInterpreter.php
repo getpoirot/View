@@ -180,8 +180,9 @@ class TwoStepInterpreter implements iInterpreterModel
             $this->_l__template = $_l__template;
             unset($_l__template);
 
-            $this->_l__baseViewModel = $_l__baseViewModel;
-            unset($_l__baseViewModel);
+            # base view model may change if we render another template inside include script
+//            $this->_l__baseViewModel = $_l__baseViewModel;
+//            unset($_l__baseViewModel);
 
 
             /** $this PermutationViewModel */
@@ -203,8 +204,11 @@ class TwoStepInterpreter implements iInterpreterModel
             }
 
             # set manipulated and new defined variables again
-            $this->_l__baseViewModel->variables()->from(get_defined_vars());
-            unset($this->_l__baseViewModel);
+            $vars = get_defined_vars();
+            unset($vars['_l__baseViewModel']);
+            $_l__baseViewModel->variables()->from($vars);
+
+//            unset($this->_l__baseViewModel);
             unset($this->_l__template);
         };
 
