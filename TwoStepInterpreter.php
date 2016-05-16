@@ -2,11 +2,11 @@
 namespace Poirot\View\Interpreter;
 
 use Poirot\Loader\Interfaces\iLoaderProvider;
-use Poirot\View\Interfaces\iInterpreterModel;
-use Poirot\View\Interfaces\iPermutationViewModel;
+use Poirot\View\Interfaces\iInterpreterView;
+use Poirot\View\Interfaces\iViewModelPermutation;
 use Poirot\View\Interfaces\iViewModel;
-use Poirot\View\Interfaces\Respec\iMRendererProvider;
-use Poirot\View\PermutationViewModel;
+use Poirot\View\Interfaces\Respec\iRendererProvider;
+use Poirot\View\ViewModelTemplate;
 
 /*
 $viewModel    = new PermutationViewModel;
@@ -23,14 +23,14 @@ $viewModel->setTemplate('default');
 echo $viewModel->render();
 */
 
-class TwoStepInterpreter implements iInterpreterModel
+class TwoStepInterpreter implements iInterpreterView
 {
-    /** @var PermutationViewModel */
+    /** @var ViewModelTemplate */
     protected $_viewModel;
 
-    /** @var iInterpreterModel */
+    /** @var iInterpreterView */
     protected $baseInterpreter;
-    /** @var PhpInterpret */
+    /** @var InterpreterPhpView */
     protected $layeredInterpreter;
 
     /**
@@ -43,7 +43,7 @@ class TwoStepInterpreter implements iInterpreterModel
     function isAcceptable(iViewModel $viewModel)
     {
         return (
-            $viewModel instanceof iPermutationViewModel
+            $viewModel instanceof iViewModelPermutation
         );
     }
 
@@ -96,10 +96,10 @@ class TwoStepInterpreter implements iInterpreterModel
      *
      * - Inject View Model
      *
-     * @param iInterpreterModel $interpreter
+     * @param iInterpreterView $interpreter
      * @return $this
      */
-    function setBaseInterpreter(iInterpreterModel $interpreter)
+    function setBaseInterpreter(iInterpreterView $interpreter)
     {
         $this->baseInterpreter = $interpreter;
 
@@ -109,12 +109,12 @@ class TwoStepInterpreter implements iInterpreterModel
     /**
      * Get Base Interpreter
      *
-     * @return iInterpreterModel
+     * @return iInterpreterView
      */
     function getBaseInterpreter()
     {
         if (!$this->baseInterpreter)
-            $this->baseInterpreter = new PhpInterpret;
+            $this->baseInterpreter = new InterpreterPhpView;
 
         $interpreter = $this->baseInterpreter;
         $interpreter->setViewModel($this->_viewModel);
@@ -125,11 +125,11 @@ class TwoStepInterpreter implements iInterpreterModel
     /**
      * Get Layered Interpreter On Base
      *
-     * @return PhpInterpret
+     * @return InterpreterPhpView
      */
     function getLayeredInterpreter()
     {
-        $interpreter = new PhpInterpret;
+        $interpreter = new InterpreterPhpView;
 
         # base layer setup
         $interpreter->setFileExt('php');
@@ -212,7 +212,7 @@ class TwoStepInterpreter implements iInterpreterModel
             unset($this->_l__template);
         };
 
-        if ($this->getBaseInterpreter() instanceof iMRendererProvider)
+        if ($this->getBaseInterpreter() instanceof iRendererProvider)
             ## Bind Layer Into Renderer
             $renderer = $renderer->bindTo($this->getBaseInterpreter()->renderer());
         else

@@ -1,17 +1,11 @@
 <?php
 namespace Poirot\View\Interfaces;
 
-use Poirot\Core\Interfaces\iBuilderSetter;
+use Poirot\Std\Interfaces\Pact\ipConfigurable;
 
-interface iViewModel extends iBuilderSetter
+interface iViewModel
+    extends ipConfigurable
 {
-    /**
-     * Construct
-     *
-     * @param array $options
-     */
-    function __construct(array $options = []);
-
     /**
      * Render View Model
      *
@@ -43,14 +37,14 @@ interface iViewModel extends iBuilderSetter
     /**
      * Bind a ViewModel Into This
      *
-     * - Final ViewModels cant bind
+     * !! Final ViewModels cant bind
      *
      * $closure
      * this closure will bind to this view model
-     * function($renderResult) {
-     *    # $renderResult is render result of
-     *    # $viewModel that we want inject into
-     *    # $this viewModel with this closure
+     * function($renderResult, $viewModel) {
+     *    ## $renderResult is render result of
+     *    #- bind viewModel as string.
+     *    #- $this == $viewModel == static extended class
      * }
      *
      * @param iViewModel $viewModel

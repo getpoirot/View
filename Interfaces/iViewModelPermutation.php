@@ -1,14 +1,15 @@
 <?php
 namespace Poirot\View\Interfaces;
 
-use Poirot\Core\Entity;
+use Poirot\Std\Interfaces\Struct\iDataEntity;
 
-interface iPermutationViewModel extends iViewModel
+interface iViewModelPermutation
+    extends iViewModel
 {
     /**
      * Set Variables
      *
-     * @param array|Entity $vars
+     * @param array|\Traversable $vars
      *
      * @return $this
      */
@@ -17,7 +18,7 @@ interface iPermutationViewModel extends iViewModel
     /**
      * Variables
      *
-     * @return Entity
+     * @return iDataEntity
      */
     function variables();
 }

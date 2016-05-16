@@ -1,33 +1,24 @@
 <?php
 namespace Poirot\View;
 
-class TextViewModel extends AbstractViewModel
+class ViewModelStatic 
+    extends aViewModel
 {
     /** @var string */
     protected $content;
-
+    
+    
     /**
      * Render View Model
      *
-     * - render bind view models first
-     *
      * @return string
+     * @throws \Exception
+     * 
+     * @see aViewModel::render
      */
-    function render()
+    function doRender()
     {
-        parent::render();
-
         return $this->getContent();
-    }
-
-    /**
-     * Get Content
-     *
-     * @return string
-     */
-    function getContent()
-    {
-        return $this->content;
     }
 
     /**
@@ -40,7 +31,16 @@ class TextViewModel extends AbstractViewModel
     function setContent($content)
     {
         $this->content = (string) $content;
-
         return $this;
+    }
+    
+    /**
+     * Get Content
+     *
+     * @return string
+     */
+    function getContent()
+    {
+        return $this->content;
     }
 }

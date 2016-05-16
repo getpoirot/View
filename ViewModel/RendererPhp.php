@@ -1,8 +1,9 @@
 <?php
-namespace Poirot\View\Interpreter;
+namespace Poirot\View\ViewModel;
 
-use Poirot\Core\Traits\OpenCallTrait;
-use Poirot\View\Exception\TemplateNotFoundException;
+use Poirot\Std\Mixin;
+use Poirot\vendor\poirot\view\Poirot\View\Interfaces\iViewRenderer;
+use Poirot\View\Exception\exTemplateNotFound;
 
 /**
  * All isolated render area must extend this class
@@ -18,10 +19,11 @@ use Poirot\View\Exception\TemplateNotFoundException;
  * [/code]
  *
  */
-class IsoRenderer
+class RendererPhp
+    extends Mixin // allow to define basic view helpers as callback methods
+    implements
+    iViewRenderer
 {
-    use OpenCallTrait;
-
     protected $_curr__captureVars = null;
 
     /**
@@ -29,14 +31,15 @@ class IsoRenderer
      *
      * !! use absolute file path
      *
-     * @param string $absFilePath File Path To Include
+     * @param string $templateFullPathname File Path To Include
      * @param array $__vars
      *
      * @throws \Exception
      * @return string
      */
-    function capture($absFilePath, array $__vars = [])
+    function capture($templateFullPathname, array $__vars = array())
     {
+        // TODO hierarchy variable pass to child not consumed successfully
         // ability to call capture method again within included file-
         // with parent/first call variables
         if ($this->_curr__captureVars === null)
@@ -44,29 +47,29 @@ class IsoRenderer
         else
             (!empty($__vars)) ?: $__vars = $this->_curr__captureVars;
 
-        if (!file_exists($absFilePath)) {
+        if (!file_exists($templateFullPathname)) {
             ## look for called script backtrace
             $backTrace = debug_backtrace()[0];
             if (isset($backTrace['file'])) {
                 ## [dirname:/var/www/html/error/]general.php
-                $tInclude = dirname($backTrace['file']).'/'.trim($absFilePath, '/');
-                (!is_file($tInclude)) ?: $absFilePath = $tInclude;
+                $tInclude = dirname($backTrace['file']).'/'.trim($templateFullPathname, '/');
+                (!is_file($tInclude)) ?: $templateFullPathname = $tInclude;
                 unset($backTrace);unset($tInclude);
             }
         }
 
-        if(!is_file($absFilePath) || !is_readable($absFilePath))
-            throw new TemplateNotFoundException(sprintf('Cant include (%s).', $absFilePath));
+        if(!is_file($templateFullPathname) || !is_readable($templateFullPathname))
+            throw new exTemplateNotFound(sprintf('Cant include (%s).', $templateFullPathname));
 
-        $this->absFilePath = $absFilePath;
-        unset($absFilePath);
+        $this->__file_to_include = $templateFullPathname;
+        unset($templateFullPathname);
 
         extract($__vars);
         unset($__vars);
 
         try {
             ob_start();
-            include $this->absFilePath;
+            include $this->__file_to_include;
             $result = ob_get_clean();
         }
         catch (\Exception $e) {
@@ -74,8 +77,7 @@ class IsoRenderer
             throw $e;
         }
 
-        unset($this->absFilePath);
-
+        unset($this->__file_to_include);
         return $result;
     }
 }
