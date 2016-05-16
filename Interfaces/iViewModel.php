@@ -39,18 +39,18 @@ interface iViewModel
      *
      * !! Final ViewModels cant bind
      *
-     * $closure
-     * this closure will bind to this view model
-     * function($renderResult, $viewModel) {
-     *    ## $renderResult is render result of
-     *    #- bind viewModel as string.
-     *    #- $this == $viewModel == static extended class
-     * }
+     * $closure:
+     *   prepare bind view model result into parent model
+     *   function($renderResult, $parentModel) {
+     *      ## $renderResult is render result of
+     *      #- bind viewModel as string.
+     *      #- $this == $parentModel == static extended class
+     *   }
      *
      * @param iViewModel $viewModel
      * @param \Closure   $closure
      *
      * @return $this
      */
-    function bind(iViewModel $viewModel, \Closure $closure);
+    function bind(iViewModel $viewModel, \Closure $closure = null);
 }

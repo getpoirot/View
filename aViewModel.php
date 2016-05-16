@@ -4,6 +4,7 @@ namespace Poirot\View;
 use Poirot\Std\ConfigurableSetter;
 use Poirot\Std\Struct\CollectionPriority;
 use Poirot\View\Interfaces\iViewModel;
+use Poirot\View\ViewModel\Feature\iViewModelBindAware;
 
 abstract class aViewModel
     extends ConfigurableSetter
@@ -64,13 +65,19 @@ abstract class aViewModel
              if ($callback instanceof \Closure && version_compare(phpversion(), '5.4.0') > 0)
                 $callback   = $callback->bindTo($this);
 
-             /** @var iViewModel $viewModel */
-             $viewModel = $vc->model;
-             try {
-                 $vResult = $viewModel->render();
+             $viewModel = new ViewModelDecorateFeatures($vc->model);
+             ($callback === null) ?: $viewModel->afterRender = $callback;
+             try 
+             {
+                 if ($viewModel instanceof iViewModelBindAware) 
+                     $viewModel->notifyRenderBy($this);
+
                  // prepare bind view model result into parent model
-                 call_user_func($callback, $vResult, $this);
-             } catch (\Exception $e) {
+                 $vResult = $viewModel->render();
+                 if ($viewModel instanceof iViewModelBindAware)
+                     $viewModel->afterRender($vResult, $this);
+             }
+             catch (\Exception $e) {
                  ## set render flag to false, render job is done
                  $this->_c__isNowRendering = false;
                  throw $e;
@@ -117,7 +124,7 @@ abstract class aViewModel
      * !! Final ViewModels cant bind
      *
      * $closure:
-     *   prepare bind view model result into parent model
+     *   prepare bind view model result into parent model (after render).
      *   function($renderResult, $parentModel) {
      *      ## $renderResult is render result of
      *      #- bind viewModel as string.
@@ -129,7 +136,7 @@ abstract class aViewModel
      *
      * @return $this
      */
-    function bind(iViewModel $viewModel, \Closure $closure)
+    function bind(iViewModel $viewModel, \Closure $closure = null)
     {
         $viewModelStore = array('model' => $viewModel, 'callback' => $closure);
         $this->queue->insert( (object) $viewModelStore );
