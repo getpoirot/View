@@ -2,8 +2,9 @@
 namespace Poirot\View\ViewModel;
 
 use Poirot\Std\Mixin;
-use Poirot\vendor\poirot\view\Poirot\View\Interfaces\iViewRenderer;
+
 use Poirot\View\Exception\exTemplateNotFound;
+use Poirot\View\Interfaces\iViewRenderer;
 
 /**
  * All isolated render area must extend this class

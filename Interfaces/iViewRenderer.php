@@ -1,5 +1,5 @@
 <?php
-namespace Poirot\vendor\poirot\view\Poirot\View\Interfaces;
+namespace Poirot\View\Interfaces;
 
 interface iViewRenderer
 {

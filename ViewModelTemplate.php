@@ -1,14 +1,15 @@
 <?php
 namespace Poirot\View;
 
-use Poirot\Loader\Interfaces\iLoader;
-use Poirot\Loader\LoaderNamespaceStack;
 use Poirot\Std\ErrorStack;
 use Poirot\Std\Interfaces\Struct\iDataEntity;
 use Poirot\Std\Struct\DataEntity;
 
-use Poirot\vendor\poirot\view\Poirot\View\Interfaces\iViewRenderer;
+use Poirot\Loader\Interfaces\iLoader;
+use Poirot\Loader\LoaderNamespaceStack;
+
 use Poirot\View\Interfaces\iViewModelPermutation;
+use Poirot\View\Interfaces\iViewRenderer;
 use Poirot\View\ViewModel\RendererPhp;
 
 class ViewModelTemplate
@@ -42,7 +43,8 @@ class ViewModelTemplate
         {
             ##! Otherwise We can set full file path name as template with extension included
 
-            if ( end( explode('.', $Template) ) == $ext )
+            $tmp = explode('.', $Template);
+            if ( end( $tmp ) == $ext )
                 ### cleanup extension if given as part of template
                 $ext = null;
 
@@ -55,7 +57,7 @@ class ViewModelTemplate
                     $Template
                     , function(&$resolved) use ($Template, $ext)
                     {
-                        if (!file_exists($resolved))
+                        if (is_dir($resolved) || !file_exists($resolved))
                             $resolved .= '/'.$Template.$ext;
 
                         if (file_exists($resolved))
