@@ -12,9 +12,9 @@ class ViewModelDecorateFeatures
     /** @var iViewModel */
     protected $_view;
 
-    /** @var callable(iViewModel $parent) */
+    /** @var callable(iViewModel $parent, $self = null) */
     public $onNotifyRender;
-    /** @var callable($renderResult, iViewModel $parent) */
+    /** @var callable($renderResult, iViewModel $parent, $self = null) */
     public $afterRender;
 
     /**
@@ -46,8 +46,10 @@ class ViewModelDecorateFeatures
         if ($callback = $this->onNotifyRender) VOID;
         elseif (method_exists($this->_view, 'notifyRenderBy'))
             $callback = array($this->_view, 'notifyRenderBy');
+        
+        // TODO bind to this if closure
 
-        if ($callback !== null) call_user_func($callback, $parentView);
+        if ($callback !== null) call_user_func($callback, $parentView, $this);
     }
 
     /**
@@ -61,7 +63,9 @@ class ViewModelDecorateFeatures
         elseif (method_exists($this->_view, 'afterRender'))
             $callback = array($this->_view, 'afterRender');
 
-        if ($callback !== null) call_user_func($callback, $result, $parentView);
+        // TODO bind to this if closure
+
+        if ($callback !== null) call_user_func($callback, $result, $parentView, $this);
     }
 
     
