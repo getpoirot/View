@@ -1,7 +1,7 @@
 # View
 Render Response Views
 
-``
+```
 $view = new P\View\ViewModelTemplate([
     'resolver_options' => [
         '*' => __DIR__.'/templates'
@@ -26,4 +26,4 @@ $bind->afterRender = function($result, $parent, $self) {
 $view->bind($bind);
 
 echo $view->setVariables(['user'=>'This is user'])->setTemplate('main')->render();
-``
+```
