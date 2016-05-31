@@ -3,6 +3,9 @@ namespace Poirot\View
 {
     /**
      * Renderer used by Two Step Views
+     * 
+     * - include template and retrieve defined variables
+     * 
      * @return \Closure
      */
     function renderManipulatedVars()

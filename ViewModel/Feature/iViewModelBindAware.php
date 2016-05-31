@@ -15,11 +15,11 @@ interface iViewModelBindAware
      * 
      * @param iViewModel $parentView
      */
-    function notifyRenderBy(iViewModel $parentView);
+    function delegateRenderBy(iViewModel $parentView);
 
     /**
-     * @param mixed      $result     Result of self::render
-     * @param iViewModel $parentView
+     * @param mixed $result Result of self::render
+     * @param iViewModel $parent
      */
-    function afterRender($result, iViewModel $parentView);
+    function assertRenderResult($result, iViewModel $parent);
 }

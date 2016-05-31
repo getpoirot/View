@@ -3,6 +3,7 @@ namespace Poirot\View;
 
 use Poirot\Std\ConfigurableSetter;
 use Poirot\Std\Struct\CollectionPriority;
+
 use Poirot\View\Interfaces\iViewModel;
 use Poirot\View\ViewModel\Feature\iViewModelBindAware;
 
@@ -65,17 +66,17 @@ abstract class aViewModel
              if ($callback instanceof \Closure && version_compare(phpversion(), '5.4.0') > 0)
                 $callback   = $callback->bindTo($this);
 
-             $viewModel = new ViewModelDecorateFeatures($vc->model);
-             ($callback === null) ?: $viewModel->afterRender = $callback;
+             $viewModel = new DecorateViewModelFeatures($vc->model);
+             ($callback === null) ?: $viewModel->assertRenderResult = $callback;
              try 
              {
                  if ($viewModel instanceof iViewModelBindAware) 
-                     $viewModel->notifyRenderBy($this);
+                     $viewModel->delegateRenderBy($this);
 
                  // prepare bind view model result into parent model
                  $vResult = $viewModel->render();
                  if ($viewModel instanceof iViewModelBindAware)
-                     $viewModel->afterRender($vResult, $this);
+                     $viewModel->assertRenderResult($vResult, $this);
              }
              catch (\Exception $e) {
                  ## set render flag to false, render job is done

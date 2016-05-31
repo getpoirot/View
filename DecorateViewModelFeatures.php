@@ -4,7 +4,7 @@ namespace Poirot\View;
 use Poirot\View\Interfaces\iViewModel;
 use Poirot\View\ViewModel\Feature\iViewModelBindAware;
 
-class ViewModelDecorateFeatures
+class DecorateViewModelFeatures
     implements
     iViewModel
     , iViewModelBindAware
@@ -13,9 +13,9 @@ class ViewModelDecorateFeatures
     protected $_view;
 
     /** @var callable(iViewModel $parent, $self = null) */
-    public $onNotifyRender;
-    /** @var callable($renderResult, iViewModel $parent, $self = null) */
-    public $afterRender;
+    public $delegateRenderBy;
+    /** @var callable($renderResult, $parent) */
+    public $assertRenderResult;
 
     /**
      * ViewModelDecorateFeatures constructor.
@@ -36,36 +36,50 @@ class ViewModelDecorateFeatures
     }
 
     /**
-     * Call When Model Bind To Parent
+     * Notify this class as bind view when render with parent
      *
      * @param iViewModel $parentView
      */
-    function notifyRenderBy(iViewModel $parentView)
+    function delegateRenderBy(iViewModel $parentView)
     {
         $callback = null;
-        if ($callback = $this->onNotifyRender) VOID;
+        if ($callback = $this->delegateRenderBy) VOID;
         elseif (method_exists($this->_view, 'notifyRenderBy'))
             $callback = array($this->_view, 'notifyRenderBy');
-        
-        // TODO bind to this if closure
+
+        // DO_LEAST_PHPVER_SUPPORT 5.4 closure bindto
+        if ($callback instanceof \Closure && version_compare(phpversion(), '5.4.0') > 0) {
+            $callback = \Closure::bind(
+                $callback
+                , $this
+                , get_class($this)
+            );
+        }
 
         if ($callback !== null) call_user_func($callback, $parentView, $this);
     }
 
     /**
      * @param mixed $result Result of self::render
-     * @param iViewModel $parentView
+     * @param iViewModel $parent
      */
-    function afterRender($result, iViewModel $parentView)
+    function assertRenderResult($result, iViewModel $parent)
     {
         $callback = null;
-        if ($callback = $this->afterRender) VOID;
+        if ($callback = $this->assertRenderResult) VOID;
         elseif (method_exists($this->_view, 'afterRender'))
             $callback = array($this->_view, 'afterRender');
 
-        // TODO bind to this if closure
+        // DO_LEAST_PHPVER_SUPPORT 5.4 closure bindto
+        if ($callback instanceof \Closure && version_compare(phpversion(), '5.4.0') > 0) {
+            $callback = \Closure::bind(
+                $callback
+                , $this
+                , get_class($this)
+            );
+        }
 
-        if ($callback !== null) call_user_func($callback, $result, $parentView, $this);
+        if ($callback !== null) call_user_func($callback, $result, $parent, $this);
     }
 
     
