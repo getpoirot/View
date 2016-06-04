@@ -66,9 +66,13 @@ abstract class aViewModel
              if ($callback instanceof \Closure && version_compare(phpversion(), '5.4.0') > 0)
                 $callback   = $callback->bindTo($this);
 
-             $viewModel = new DecorateViewModelFeatures($vc->model);
+             $viewModel = $vc->model;
+             if (!$viewModel instanceof DecorateViewModelFeatures)
+                 $viewModel = new DecorateViewModelFeatures($viewModel);
+             ## override or set callback
              ($callback === null) ?: $viewModel->assertRenderResult = $callback;
-             try 
+             
+             try
              {
                  if ($viewModel instanceof iViewModelBindAware) 
                      $viewModel->delegateRenderBy($this);
@@ -132,8 +136,8 @@ abstract class aViewModel
      *      #- $this == $parentModel == static extended class
      *   }
      *
-     * @param iViewModel $viewModel
-     * @param \Closure   $closure
+     * @param iViewModel|DecorateViewModelFeatures $viewModel
+     * @param \Closure|null                        $closure
      *
      * @return $this
      */
@@ -142,5 +146,27 @@ abstract class aViewModel
         $viewModelStore = array('model' => $viewModel, 'callback' => $closure);
         $this->queue->insert( (object) $viewModelStore );
         return $this;
+    }
+    
+    
+    // ..
+
+    function __clone()
+    {
+        $_f__clone_array = function($arr) use (&$_f__clone_array) {
+            foreach ($arr as &$v) {
+                if (is_array($v))
+                    $_f__clone_array($v);
+                elseif (is_object($v))
+                    $v = clone $v;
+            }
+        };
+
+        foreach($this as &$val) {
+            if (is_array($val))
+                $_f__clone_array($val);
+            elseif (is_object($val))
+                $val = clone $val;
+        }
     }
 }

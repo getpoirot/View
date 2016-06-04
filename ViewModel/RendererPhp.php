@@ -36,7 +36,7 @@ class RendererPhp
      * @param array $__vars
      *
      * @throws \Exception
-     * @return string
+     * @return string|mixed if included file return something
      */
     function capture($templateFullPathname, array $__vars = array())
     {
@@ -70,8 +70,11 @@ class RendererPhp
 
         try {
             ob_start();
-            include $this->__file_to_include;
-            $result = ob_get_clean();
+            if (1 === $result = include $this->__file_to_include)
+                ## file included but return nothing
+                $result = ob_get_clean();
+            else
+                ob_end_clean();
         }
         catch (\Exception $e) {
             ob_end_clean();

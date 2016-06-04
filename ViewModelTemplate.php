@@ -25,8 +25,6 @@ class ViewModelTemplate
     protected $renderer;
 
     protected $template;
-    /** @var string Default Template File Extension */
-    protected $templateExtension = 'phtml';
 
 
     /**
@@ -37,39 +35,14 @@ class ViewModelTemplate
     function doRender()
     {
         $Template = $this->getTemplate();
-        $ext      = $this->getExtension();
 
         if (!is_file($Template))
         {
-            ##! Otherwise We can set full file path name as template with extension included
+            ## resolve to template file path from name
+            $_t_template = $this->resolver()->resolve($Template);
 
-            $tmp = explode('.', $Template);
-            if ( end( $tmp ) == $ext )
-                ### cleanup extension if given as part of template
-                $ext = null;
-
-            $ext = ($ext == null || $ext == '') ? $ext : '.'.$ext;
-
-            if (!is_file($Template.$ext)) {
-                $resolved = false;
-                ## resolve to template file path from name
-                $_t_template = $this->resolver()->resolve(
-                    $Template
-                    , function(&$resolved) use ($Template, $ext)
-                    {
-                        if (is_dir($resolved) || !file_exists($resolved))
-                            $resolved .= '/'.$Template.$ext;
-
-                        if (file_exists($resolved))
-                            return $resolved;
-
-                        return false;
-                    }
-                );
-
-                ## only if file resolved
-                ($_t_template === false) ?: $Template = $_t_template;
-            }
+            ## only if file resolved
+            ($_t_template === false) ?: $Template = $_t_template;
 
             ##! Note:
             ##- if file not resolved let it handle within renderer
@@ -89,7 +62,7 @@ class ViewModelTemplate
         }
         if ($ex = ErrorStack::handleDone()) throw $ex; // --------------/
 
-
+        
         return $result;
     }
 
@@ -201,29 +174,6 @@ class ViewModelTemplate
             $this->setResolver(new LoaderNamespaceStack);
 
         return $this->resolver;
-    }
-
-    /**
-     * Set Template File Extension
-     *
-     * @param string $ext
-     *
-     * @return $this
-     */
-    function setExtension($ext)
-    {
-        $this->templateExtension = rtrim((string) $ext, '.');
-        return $this;
-    }
-
-    /**
-     * Get Template File Extension
-     *
-     * @return string
-     */
-    function getExtension()
-    {
-        return $this->templateExtension;
     }
 
     /**
