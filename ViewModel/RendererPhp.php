@@ -52,7 +52,7 @@ class RendererPhp
             ## look for called script backtrace
             $backTrace = debug_backtrace()[0];
             if (isset($backTrace['file'])) {
-                ## [dirname:/var/www/html/error/]general.php
+                ## [dirname:/var/www/html/error/].error.page.php
                 $tInclude = dirname($backTrace['file']).'/'.trim($templateFullPathname, '/');
                 (!is_file($tInclude)) ?: $templateFullPathname = $tInclude;
                 unset($backTrace);unset($tInclude);
