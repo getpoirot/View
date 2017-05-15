@@ -150,7 +150,7 @@ class ViewModelTemplate
     protected function setResolverOptions($options)
     {
         $resolver = $this->resolver();
-        $resolver->with($resolver::withOf($options));
+        $resolver->with($resolver::parseWith($options));
     }
 
     /**
