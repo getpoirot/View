@@ -3,6 +3,7 @@ namespace Poirot\View\Interfaces;
 
 use Poirot\Std\Interfaces\Struct\iDataEntity;
 
+
 interface iViewModelPermutation
     extends iViewModel
 {
