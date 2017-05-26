@@ -12,6 +12,7 @@ use Poirot\View\Interfaces\iViewModelPermutation;
 use Poirot\View\Interfaces\iViewRenderer;
 use Poirot\View\ViewModel\RendererPhp;
 
+
 class ViewModelTemplate
     extends aViewModel
     implements iViewModelPermutation
@@ -88,7 +89,7 @@ class ViewModelTemplate
     function variables()
     {
         if (!$this->variables)
-            $this->variables = new DataEntity();
+            $this->variables = new DataEntity;
 
         return $this->variables;
     }
@@ -124,7 +125,7 @@ class ViewModelTemplate
      */
     function renderer()
     {
-        if (!$this->renderer)
+        if (! $this->renderer )
             $this->setRenderer(new RendererPhp);
 
         return $this->renderer;

@@ -1,3 +1,6 @@
 <?php
-namespace Poirot\View;
+namespace Poirot\View
+{
+
+}
 

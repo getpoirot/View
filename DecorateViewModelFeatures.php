@@ -4,6 +4,12 @@ namespace Poirot\View;
 use Poirot\View\Interfaces\iViewModel;
 use Poirot\View\ViewModel\Feature\iViewModelBindAware;
 
+
+/**
+ * Decorator Allow ViewModels act as iViewModelBindAware
+ * with ability to bind to another viewModel
+ *
+ */
 class DecorateViewModelFeatures
     implements
     iViewModel
@@ -13,39 +19,47 @@ class DecorateViewModelFeatures
     protected $_view;
 
     /** @var callable(iViewModel $parent, $self = null) */
-    public $delegateRenderBy;
-    /** @var callable($renderResult, $parent) */
-    public $assertRenderResult;
+    protected $delegateRenderBy;
+    /** @var callable($renderResult, $parent, $self = null) */
+    protected $assertRenderResult;
+
 
     /**
      * ViewModelDecorateFeatures constructor.
+     *
      * @param iViewModel $viewModel
+     * @param callable   $delegateRenderBy   f($parentView, $self)
+     * @param callable   $assertRenderResult f($result, $parent, $self)
      */
-    function __construct(iViewModel $viewModel)
+    function __construct(iViewModel $viewModel, $delegateRenderBy, $assertRenderResult)
     {
         $this->_view = $viewModel;
+
+        if (! (is_callable($delegateRenderBy) && is_callable($assertRenderResult)) )
+            throw new \InvalidArgumentException('Delegate and Assert must be a valid callable.');
+
+        $this->delegateRenderBy   = $delegateRenderBy;
+        $this->assertRenderResult = $assertRenderResult;
     }
 
     /**
      * Proxy all calls to wrapped ViewModel
      * @return mixed
      */
-    function __call($name, $arguments)
+    function __call($method, $arguments)
     {
-        return call_user_func_array(array($this->_view, $name), $arguments);
+        return call_user_func_array(array($this->_view, $method), $arguments);
     }
 
     /**
-     * Notify this class as bind view when render with parent
+     * Call Before Rendering ViewModel Itself,
+     * tell viewModel About ParentView that render it.
      *
      * @param iViewModel $parentView
      */
     function delegateRenderBy(iViewModel $parentView)
     {
-        $callback = null;
-        if ($callback = $this->delegateRenderBy) VOID;
-        elseif (method_exists($this->_view, 'notifyRenderBy'))
-            $callback = array($this->_view, 'notifyRenderBy');
+        $callback = $this->delegateRenderBy;
 
         // DO_LEAST_PHPVER_SUPPORT 5.4 closure bindto
         if ($callback instanceof \Closure && version_compare(phpversion(), '5.4.0') > 0) {
@@ -56,7 +70,7 @@ class DecorateViewModelFeatures
             );
         }
 
-        if ($callback !== null) call_user_func($callback, $parentView, $this);
+        call_user_func($callback, $parentView, $this->_view);
     }
 
     /**
@@ -65,10 +79,7 @@ class DecorateViewModelFeatures
      */
     function assertRenderResult($result, iViewModel $parent)
     {
-        $callback = null;
-        if ($callback = $this->assertRenderResult) VOID;
-        elseif (method_exists($this->_view, 'afterRender'))
-            $callback = array($this->_view, 'afterRender');
+        $callback = $this->assertRenderResult;
 
         // DO_LEAST_PHPVER_SUPPORT 5.4 closure bindto
         if ($callback instanceof \Closure && version_compare(phpversion(), '5.4.0') > 0) {
@@ -79,7 +90,7 @@ class DecorateViewModelFeatures
             );
         }
 
-        if ($callback !== null) call_user_func($callback, $result, $parent, $this);
+        call_user_func($callback, $result, $parent, $this->_view);
     }
 
     
@@ -136,16 +147,19 @@ class DecorateViewModelFeatures
      *      #- $this == $parentModel == static extended class
      *   }
      *
-     * @param iViewModel $viewModel
-     * @param \Closure $closure
+     * @param iViewModelBindAware $viewModel
+     * @param int                 $priority
      *
      * @return $this
      */
-    function bind(iViewModel $viewModel, \Closure $closure = null)
+    function bind(iViewModelBindAware $viewModel, $priority = 0)
     {
-        $this->_view->bind($viewModel, $closure);
+        $this->_view->bind($viewModel, $priority);
         return $this;
     }
+
+
+    // Configurable
 
     /**
      * Build Object With Provided Options

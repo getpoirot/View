@@ -2,6 +2,8 @@
 namespace Poirot\View\Interfaces;
 
 use Poirot\Std\Interfaces\Pact\ipConfigurable;
+use Poirot\View\ViewModel\Feature\iViewModelBindAware;
+
 
 interface iViewModel
     extends ipConfigurable
@@ -47,10 +49,10 @@ interface iViewModel
      *      #- $this == $parentModel == static extended class
      *   }
      *
-     * @param iViewModel $viewModel
-     * @param \Closure   $closure
+     * @param iViewModelBindAware $viewModel
+     * @param int                 $priority
      *
      * @return $this
      */
-    function bind(iViewModel $viewModel, \Closure $closure = null);
+    function bind(iViewModelBindAware $viewModel, $priority = 0);
 }

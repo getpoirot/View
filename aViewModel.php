@@ -7,17 +7,17 @@ use Poirot\Std\Struct\CollectionPriority;
 use Poirot\View\Interfaces\iViewModel;
 use Poirot\View\ViewModel\Feature\iViewModelBindAware;
 
+
 abstract class aViewModel
     extends ConfigurableSetter
     implements iViewModel
 {
     /** @var bool Is Final ViewModel */
     protected $isFinal;
-
-    /** @var CollectionPriority */
+    /** @var CollectionPriority (DecorateViewModelFeatures) */
     protected $queue;
-
     protected $_c__isNowRendering = false;
+
 
     /**
      * Construct
@@ -27,7 +27,7 @@ abstract class aViewModel
     function __construct($options = null)
     {
         parent::__construct($options);
-        $this->queue = new CollectionPriority();
+        $this->queue = new CollectionPriority;
     }
 
     /**
@@ -52,35 +52,23 @@ abstract class aViewModel
              return '';
 
          $this->_c__isNowRendering = true;
-         
+
+
          # Render Bind View Models:
-         $curQueue = clone $this->queue;
-         /** @var \stdClass {model:, callback:} $vc */
+         #
+         $makeCopyOfCurrentQueue = clone $this->queue;
          foreach($this->queue as $vc) 
          {
-             // drop it out
-             // $this->queue->del($vc);
+             /** @var DecorateViewModelFeatures $vc */
 
-             $callback   = $vc->callback;
-             // DO_LEAST_PHPVER_SUPPORT 5.4 closure bindto
-             if ($callback instanceof \Closure && version_compare(phpversion(), '5.4.0') > 0)
-                $callback   = $callback->bindTo($this);
-
-             $viewModel = $vc->model;
-             if (!$viewModel instanceof DecorateViewModelFeatures)
-                 $viewModel = new DecorateViewModelFeatures($viewModel);
-             ## override or set callback
-             ($callback === null) ?: $viewModel->assertRenderResult = $callback;
-             
              try
              {
-                 if ($viewModel instanceof iViewModelBindAware) 
-                     $viewModel->delegateRenderBy($this);
-
+                 $vc->delegateRenderBy($this);
                  // prepare bind view model result into parent model
-                 $vResult = $viewModel->render();
-                 if ($viewModel instanceof iViewModelBindAware)
-                     $viewModel->assertRenderResult($vResult, $this);
+                 $vc->assertRenderResult(
+                     $vc->render()
+                     , $this
+                 );
              }
              catch (\Exception $e) {
                  ## set render flag to false, render job is done
@@ -89,7 +77,7 @@ abstract class aViewModel
              }
          }
          
-         $this->queue = $curQueue;
+         $this->queue = $makeCopyOfCurrentQueue;
          $this->_c__isNowRendering = false;
 
          # Then Render Self ...
@@ -129,22 +117,21 @@ abstract class aViewModel
      * !! Final ViewModels cant bind
      *
      * $closure:
-     *   prepare bind view model result into parent model (after render).
+     *   prepare bind view model result into parent model
      *   function($renderResult, $parentModel) {
      *      ## $renderResult is render result of
      *      #- bind viewModel as string.
      *      #- $this == $parentModel == static extended class
      *   }
      *
-     * @param iViewModel|DecorateViewModelFeatures $viewModel
-     * @param \Closure|null                        $closure
+     * @param iViewModelBindAware $viewModel
+     * @param int                 $priority
      *
      * @return $this
      */
-    function bind(iViewModel $viewModel, \Closure $closure = null)
+    function bind(iViewModelBindAware $viewModel, $priority = 0)
     {
-        $viewModelStore = array('model' => $viewModel, 'callback' => $closure);
-        $this->queue->insert( (object) $viewModelStore );
+        $this->queue->insert( (object) $viewModel, $priority );
         return $this;
     }
     

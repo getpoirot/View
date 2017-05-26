@@ -11,8 +11,9 @@ use Poirot\View\Interfaces\iViewModel;
 interface iViewModelBindAware
 {
     /**
-     * Call When Model Bind To Parent
-     * 
+     * Call Before Rendering ViewModel Itself,
+     * tell viewModel About ParentView that render it.
+     *
      * @param iViewModel $parentView
      */
     function delegateRenderBy(iViewModel $parentView);

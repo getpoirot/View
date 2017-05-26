@@ -1,6 +1,7 @@
 <?php
 namespace Poirot\View;
 
+
 class ViewModelStatic 
     extends aViewModel
 {
