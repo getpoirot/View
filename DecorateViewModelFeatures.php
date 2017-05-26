@@ -65,7 +65,7 @@ class DecorateViewModelFeatures
         if ($callback instanceof \Closure && version_compare(phpversion(), '5.4.0') > 0) {
             $callback = \Closure::bind(
                 $callback
-                , $this
+                , $this->_view
                 , get_class($this)
             );
         }
@@ -85,7 +85,7 @@ class DecorateViewModelFeatures
         if ($callback instanceof \Closure && version_compare(phpversion(), '5.4.0') > 0) {
             $callback = \Closure::bind(
                 $callback
-                , $this
+                , $this->_view
                 , get_class($this)
             );
         }

@@ -57,7 +57,7 @@ abstract class aViewModel
          # Render Bind View Models:
          #
          $makeCopyOfCurrentQueue = clone $this->queue;
-         foreach($this->queue as $vc) 
+         foreach($this->queue as $vc)
          {
              /** @var DecorateViewModelFeatures $vc */
 
@@ -66,9 +66,12 @@ abstract class aViewModel
                  $vc->delegateRenderBy($this);
                  // prepare bind view model result into parent model
                  $vc->assertRenderResult(
-                     $vc->render()
+                     $vc_render = $vc->render()
                      , $this
                  );
+
+                 if ( $vc->isFinal() )
+                     $rFinal = (string) $vc_render;
              }
              catch (\Exception $e) {
                  ## set render flag to false, render job is done
@@ -79,6 +82,10 @@ abstract class aViewModel
          
          $this->queue = $makeCopyOfCurrentQueue;
          $this->_c__isNowRendering = false;
+
+
+         if ( isset($rFinal) )
+             return $rFinal;
 
          # Then Render Self ...
          ## ... implement on extend classes
@@ -131,7 +138,7 @@ abstract class aViewModel
      */
     function bind(iViewModelBindAware $viewModel, $priority = 0)
     {
-        $this->queue->insert( (object) $viewModel, $priority );
+        $this->queue->insert( (object) $viewModel );
         return $this;
     }
     

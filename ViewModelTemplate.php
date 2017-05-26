@@ -37,7 +37,7 @@ class ViewModelTemplate
     {
         $Template = $this->getTemplate();
 
-        if (!is_file($Template))
+        if (! is_file($Template) )
         {
             ## resolve to template file path from name
             $_t_template = $this->resolver()->resolve($Template);
@@ -55,15 +55,16 @@ class ViewModelTemplate
         $renderer = $this->renderer();
 
         ErrorStack::handleError(); // handle errors --------------------\
-        if (is_callable($renderer)) {
+        #
+        if (is_callable($renderer))
             $result = call_user_func($renderer, $Template, $vars);
-        } else {
+        else
             ### its renderer instance
             $result = $renderer->capture($Template, $vars);
-        }
+        #
         if ($ex = ErrorStack::handleDone()) throw $ex; // --------------/
 
-        
+
         return $result;
     }
 
@@ -88,11 +89,12 @@ class ViewModelTemplate
      */
     function variables()
     {
-        if (!$this->variables)
+        if (! $this->variables )
             $this->variables = new DataEntity;
 
         return $this->variables;
     }
+
 
     // Options:
 
