@@ -36,6 +36,9 @@ class ViewModelTemplate
     function doRender()
     {
         $Template = $this->getTemplate();
+        if ($Template === null)
+            // Nothing To Render!!
+            return null;
 
         if (! is_file($Template) )
         {
@@ -53,6 +56,8 @@ class ViewModelTemplate
         ## Render Into Variable:
         $vars = \Poirot\Std\cast($this->variables())->toArray();
         $renderer = $this->renderer();
+
+        // !! If Template not resolved also let renderer to resolve into template path.
 
         ErrorStack::handleError(); // handle errors --------------------\
         #
