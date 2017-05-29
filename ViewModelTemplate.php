@@ -33,7 +33,7 @@ class ViewModelTemplate
      * @return string
      * @throws \Exception
      */
-    function doRender()
+    function render()
     {
         $Template = $this->getTemplate();
         if ($Template === null)

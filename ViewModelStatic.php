@@ -17,7 +17,7 @@ class ViewModelStatic
      * 
      * @see aViewModel::render
      */
-    function doRender()
+    function render()
     {
         return $this->getContent();
     }

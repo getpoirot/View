@@ -2,7 +2,6 @@
 namespace Poirot\View\Interfaces;
 
 use Poirot\Std\Interfaces\Pact\ipConfigurable;
-use Poirot\View\ViewModel\Feature\iViewModelBindAware;
 
 
 interface iViewModel
@@ -35,24 +34,4 @@ interface iViewModel
      * @return bool
      */
     function isFinal();
-
-    /**
-     * Bind a ViewModel Into This
-     *
-     * !! Final ViewModels cant bind
-     *
-     * $closure:
-     *   prepare bind view model result into parent model
-     *   function($renderResult, $parentModel) {
-     *      ## $renderResult is render result of
-     *      #- bind viewModel as string.
-     *      #- $this == $parentModel == static extended class
-     *   }
-     *
-     * @param iViewModelBindAware $viewModel
-     * @param int                 $priority
-     *
-     * @return $this
-     */
-    function bind(iViewModelBindAware $viewModel, $priority = 0);
 }
