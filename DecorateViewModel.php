@@ -61,7 +61,7 @@ class DecorateViewModel
         $this->queue = new CollectionPriority;
     }
 
-    static function New(iViewModel $viewModel, $delegateRenderBy = null, $assertRenderResult = null)
+    static function of(iViewModel $viewModel, $delegateRenderBy = null, $assertRenderResult = null)
     {
         return new static($viewModel, $delegateRenderBy, $assertRenderResult);
     }
