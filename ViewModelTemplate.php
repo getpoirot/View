@@ -77,6 +77,8 @@ class ViewModelTemplate
     /**
      * Set Variables
      *
+     * - Variables can include null value
+     *
      * @param array|\Traversable $vars
      *
      * @return $this

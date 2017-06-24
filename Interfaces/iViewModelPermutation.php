@@ -10,6 +10,8 @@ interface iViewModelPermutation
     /**
      * Set Variables
      *
+     * - Variables can include null value
+     *
      * @param array|\Traversable $vars
      *
      * @return $this
