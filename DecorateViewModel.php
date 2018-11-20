@@ -16,6 +16,25 @@ $viewAsTemplate->bind( new DecorateViewModelFeatures(
 ));
 */
 
+
+/*
+return function ($parent) use ($var)
+{
+    $parent->setFinal();
+};
+*/
+
+/*
+return function ($parent) use ($var)
+{
+    /** @var \Poirot\View\ViewModelTemplate $parent * /
+    $parent->root()->setVariables([
+        'header_class' => ['fixed', 'fullwidth', 'dashboard'],
+        'no_footer'    => true,
+    ]);
+};
+*/
+
 /**
  * Decorator Allow ViewModels act as iViewModelBindAware
  * with ability to bind to another viewModel
