@@ -11,8 +11,8 @@ $viewAsTemplate->bind( new DecorateViewModelFeatures(
     $viewModel
     , function(){}
     , function($resultRender, $parent) {
-    $parent->variables()->set('content', (string) $resultRender);
-}
+        $parent->variables()->set('content', (string) $resultRender);
+    }
 ));
 */
 
