@@ -13,7 +13,6 @@
         "poirot/std": "dev-master"
         , "poirot/loader": "dev-master"
     }
-    , "target-dir": "Poirot/View"
     , "autoload"  : {
         "psr-4": {
             "Poirot\\View\\": "src/"
