@@ -12,6 +12,7 @@ use Poirot\View\Interfaces\iViewModelPermutation;
 use Poirot\View\Interfaces\iViewRenderer;
 use Poirot\View\ViewModel\RendererPhp;
 
+
 class ViewModelTemplate
     extends aViewModel
     implements iViewModelPermutation
@@ -32,11 +33,14 @@ class ViewModelTemplate
      * @return string
      * @throws \Exception
      */
-    function doRender()
+    function render()
     {
         $Template = $this->getTemplate();
+        if ($Template === null)
+            // Nothing To Render!!
+            return null;
 
-        if (!is_file($Template))
+        if (! is_file($Template) )
         {
             ## resolve to template file path from name
             $_t_template = $this->resolver()->resolve($Template);
@@ -53,22 +57,27 @@ class ViewModelTemplate
         $vars = \Poirot\Std\cast($this->variables())->toArray();
         $renderer = $this->renderer();
 
+        // !! If Template not resolved also let renderer to resolve into template path.
+
         ErrorStack::handleError(); // handle errors --------------------\
-        if (is_callable($renderer)) {
+        #
+        if (is_callable($renderer))
             $result = call_user_func($renderer, $Template, $vars);
-        } else {
+        else
             ### its renderer instance
             $result = $renderer->capture($Template, $vars);
-        }
+        #
         if ($ex = ErrorStack::handleDone()) throw $ex; // --------------/
 
-        
+
         return $result;
     }
 
 
     /**
      * Set Variables
+     *
+     * - Variables can include null value
      *
      * @param array|\Traversable $vars
      *
@@ -87,11 +96,12 @@ class ViewModelTemplate
      */
     function variables()
     {
-        if (!$this->variables)
-            $this->variables = new DataEntity();
+        if (! $this->variables )
+            $this->variables = new DataEntity;
 
         return $this->variables;
     }
+
 
     // Options:
 
@@ -124,7 +134,7 @@ class ViewModelTemplate
      */
     function renderer()
     {
-        if (!$this->renderer)
+        if (! $this->renderer )
             $this->setRenderer(new RendererPhp);
 
         return $this->renderer;
@@ -150,7 +160,7 @@ class ViewModelTemplate
     protected function setResolverOptions($options)
     {
         $resolver = $this->resolver();
-        $resolver->with($resolver::withOf($options));
+        $resolver->with($resolver::parseWith($options));
     }
 
     /**

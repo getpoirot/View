@@ -1,25 +1,22 @@
 {
-    "name": "poirot/view",
-    "description": "Render View Templates.",
-    "type"       : "library",
-    "authors": [
+    "name": "poirot/view"
+    , "description": "Render View Templates."
+    , "type"       : "library"
+    , "authors": [
         {
-            "name": "Payam Naderi",
-            "email": "naderi.payam@gmail.com",
-            "role": "Developer"
+            "name": "Payam Naderi"
+            , "email": "naderi.payam@gmail.com"
+            , "role": "Developer"
         }
-    ],
-    "require": {
-        "poirot/std": "dev-master"
-        , "poirot/loader": "dev-master"
-    },
-    "target-dir": "Poirot/View",
-    "autoload"  : {
-        "psr-0": {
-            "Poirot\\View": "."
+    ]
+    , "require": {
+        "poirot/std": "dev-devel"
+        , "poirot/loader": "dev-devel"
+    }
+    , "target-dir": "Poirot/View"
+    , "autoload"  : {
+        "psr-4": {
+            "Poirot\\View\\": "src/"
         }
-        , "files": [
-            "_functions.php"
-        ]
     }
 }
