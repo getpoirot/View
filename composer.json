@@ -10,8 +10,8 @@
         }
     ]
     , "require": {
-        "poirot/std": "dev-devel"
-        , "poirot/loader": "dev-devel"
+        "poirot/std": "dev-master"
+        , "poirot/loader": "dev-master"
     }
     , "target-dir": "Poirot/View"
     , "autoload"  : {
