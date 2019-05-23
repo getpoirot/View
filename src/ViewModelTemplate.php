@@ -13,6 +13,21 @@ use Poirot\View\Interfaces\iViewRenderer;
 use Poirot\View\ViewModel\RendererPhp;
 
 
+/*
+$viewTemplate = new P\View\ViewModelTemplate;
+$viewTemplate
+    ->setRenderer( new P\View\ViewModel\RendererPhp )
+    ->setTemplate('template.php')
+    ->resolver(function($resolver) {
+        $resolver->addResource('**', __DIR__.'/data/');
+    })
+    ->setVariables([
+        'content' => 'This is content',
+        'footer' => 'this is footer',
+    ])
+;
+*/
+
 class ViewModelTemplate
     extends aViewModel
     implements iViewModelPermutation
@@ -176,12 +191,26 @@ class ViewModelTemplate
      *
      *    - resolve('Main') -> '/path/to/templates/Main.phtml'
      *
+     *
+     *  ->addResource('**', __DIR__.'/path/to/templates') )
+     *
      * @return LoaderNamespaceStack|iLoader
      */
-    function resolver()
+    function resolver($chainCallback = null)
     {
-        if (!$this->resolver)
-            $this->setResolver(new LoaderNamespaceStack);
+        if (! $this->resolver )
+        {
+            $defaultResolver = new LoaderNamespaceStack(null, function($name, $resource, $match) {
+                return \Poirot\Loader\funcWatchFileExists($name, $resource, $match);
+            });
+
+            $this->setResolver($defaultResolver);
+        }
+
+        if ($chainCallback) {
+            call_user_func($chainCallback, $this->resolver);
+            return $this;
+        }
 
         return $this->resolver;
     }

@@ -1,6 +1,7 @@
 <?php
 namespace Poirot\View\Interfaces;
 
+
 interface iViewRenderer
 {
     /**
@@ -14,5 +15,5 @@ interface iViewRenderer
      * @throws \Exception
      * @return string
      */
-    function capture($templateFullPathname, array $__vars = array());
+    function capture($templateFullPathname, array $__vars = []);
 }

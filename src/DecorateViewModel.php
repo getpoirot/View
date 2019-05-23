@@ -2,29 +2,52 @@
 namespace Poirot\View;
 
 use Poirot\Std\Struct\CollectionPriority;
+use Poirot\Std\Traits\tClone;
 use Poirot\View\Interfaces\iViewModel;
 
+
 /*
-// put viewChild render content into $content variable of viewTemplate
-// in parent layout it can be printed, exp. <?= $content ?>
-$viewAsTemplate->bind( new DecorateViewModelFeatures(
-    $viewModel
-    , function(){}
-    , function($resultRender, $parent) {
-        $parent->variables()->set('content', (string) $resultRender);
-    }
-));
+// Demonstrate Layout Decorator
+//
+$viewTemplate = new P\View\ViewModelTemplate;
+$viewTemplate
+    ->setRenderer( new P\View\ViewModel\RendererPhp )
+    ->setTemplate('template.php')
+    ->resolver(function($resolver) {
+        $resolver->addResource('**', __DIR__.'/data/');
+    })
+    ->setVariables([
+        'content' => 'default_content',
+        'footer'  => 'this is footer',
+    ])
+;
+
+$decorate = new P\View\DecorateViewModel(
+    new P\View\ViewModelStatic(['content' => 'This is content of page'])
+    , function($result, $parent, $self) {
+    $parent->view()->setVariables(['content' => $result]);
+}
+);
+
+$viewTemplate = new P\View\DecorateViewModel($viewTemplate);
+$viewTemplate->bind($decorate, 10, 'page_content');
+
+echo $viewTemplate->render();
 */
 
 
 /*
-return function ($parent) use ($var)
+// When we use two-step view; want to render PageView without Layout
+//
+return function ($parent)
 {
     $parent->setFinal();
 };
 */
 
 /*
+// When we use two-step view; want to inject variables to PageView and Layout
+//
 return function ($parent) use ($var)
 {
     /** @var \Poirot\View\ViewModelTemplate $parent * /
@@ -36,54 +59,47 @@ return function ($parent) use ($var)
 */
 
 /**
- * Decorator Allow ViewModels act as iViewModelBindAware
- * with ability to bind to another viewModel
+ * Add ability by wrap a ViewModel to bind to another viewModel
  *
  */
 class DecorateViewModel
-    implements
-    iViewModel
+    implements iViewModel
 {
-    /** @var iViewModel */
-    protected $_view;
+    use tClone;
 
-    /** @var CollectionPriority (DecorateViewModelFeatures) */
+
+    /** @var iViewModel */
+    protected $viewWrap;
+
+    /** @var CollectionPriority */
     protected $queue;
-    /** @var callable(iViewModel $parent, $self = null) */
-    protected $delegateRenderBy;
-    /** @var callable($renderResult, $parent, $self = null) */
     protected $assertRenderResult;
+
     /** @var null|DecorateViewModel Root if it has! */
-    protected $myRoot;
-    protected $nextRoot;
+    protected $parentDecorator;
+    protected $childDecorator;
 
     protected $_c__isNowRendering = false;
+    protected $__mapped_items;
 
 
     /**
      * ViewModelDecorateFeatures constructor.
      *
      * @param iViewModel $viewModel
-     * @param callable   $delegateRenderBy   f($parentView, $self)
      * @param callable   $assertRenderResult f($result, $parent, $self)
      */
-    function __construct(iViewModel $viewModel, $delegateRenderBy = null, $assertRenderResult = null)
+    function __construct(iViewModel $viewModel, $assertRenderResult = null)
     {
-        $this->_view = $viewModel;
+        $this->viewWrap = $viewModel;
         if ($viewModel instanceof DecorateViewModel && $viewModel->parent() === null)
             // Change parent of chain to this if undefined!!
-            $viewModel->myRoot = $this;
+            $viewModel->parentDecorator = $this;
 
-        $this->delegateRenderBy   = $delegateRenderBy;
+
         $this->assertRenderResult = $assertRenderResult;
-
-        $this->queue = new CollectionPriority;
     }
 
-    static function of(iViewModel $viewModel, $delegateRenderBy = null, $assertRenderResult = null)
-    {
-        return new static($viewModel, $delegateRenderBy, $assertRenderResult);
-    }
 
     /**
      * Render View Model
@@ -103,40 +119,34 @@ class DecorateViewModel
 
         # Render Bind View Models:
         #
-        $makeCopyOfCurrentQueue = clone $this->queue;
-        foreach($this->queue as $vc)
+        /** @var DecorateViewModel $bindView */
+        foreach(clone $this->_priorityQueue() as $bindView)
         {
-            /** @var DecorateViewModel $vc */
-
-            try
-            {
-                $vc->delegateRenderBy($this, $this->nextRoot);
+            try {
                 // prepare bind view model result into parent model
-                $vc->assertRenderResult(
-                    $vc_render = $vc->render()
+                $bindView->_callAfterRenderDelegateParent(
+                    $bindViewRender = $bindView->render()
                     , $this
                 );
 
-                if ( $vc->isFinal() )
-                    $rFinal = (string) $vc_render;
-            }
-            catch (\Exception $e) {
+            } catch (\Exception $e) {
                 ## set render flag to false, render job is done
                 $this->_c__isNowRendering = false;
                 throw $e;
             }
+
+
+            if ( $bindView->isFinal() )
+                $rFinal = (string) $bindViewRender;
         }
 
-        $this->queue = $makeCopyOfCurrentQueue;
         $this->_c__isNowRendering = false;
-
 
         if ( isset($rFinal) )
             return $rFinal;
 
-        # Then Render Self ...
-        ## ... implement on extend classes
-        return $this->_view->render();
+
+        return $this->view()->render();
     }
 
     /**
@@ -153,95 +163,46 @@ class DecorateViewModel
      *   }
      *
      * @param DecorateViewModel $viewModel
-     * @param int               $priority
+     * @param int|string        $priorityOrTag
+     * @param string|null       $tag
      *
      * @return $this
      */
-    function bind(DecorateViewModel $viewModel, $priority = 0)
+    function bind(DecorateViewModel $viewModel, $priorityOrTag = 10, $tag = null)
     {
-        $viewModel->myRoot = $this;
+        $priority = $priorityOrTag;
+        if (is_string($priorityOrTag)) {
+            $priority = 10; // default
+            $tag = $priorityOrTag;
+        }
 
-        $this->queue->insert( (object) $viewModel, $priority );
+
+        $viewModel->parentDecorator = $this;
+        $this->_priorityQueue()->insert($viewModel, $priority);
+
+        $this->__mapped_items[$this->_normalize($tag)] = [ // allow override current tags
+            'priority' => $priority,
+            'view'     => $viewModel
+        ];
+
         return $this;
     }
 
     /**
-     * Call Before Rendering ViewModel Itself,
-     * tell viewModel About ParentView that render it.
+     * Get Bind Decorate View Model By Tag
      *
-     * @param DecorateViewModel $parentView
-     * @param null|iViewModel   $rootPassedToNext
+     * @param string $tag
      *
-     * @return void
+     * @return iViewModel|null
      */
-    function delegateRenderBy(DecorateViewModel $parentView, $rootPassedToNext = null)
+    function getBindByTag($tag)
     {
-        if ($rootPassedToNext === null)
-            // first segment of list do not pass nextRoot
-            $rootPassedToNext = $parentView;
+        $tag = $this->_normalize($tag);
 
-        $this->myRoot   = $rootPassedToNext;
-        $this->nextRoot = $parentView;
+        if (! isset($this->__mapped_items[$tag]) )
+            return null;
 
-
-        if (null ===  $callback = $this->delegateRenderBy )
-            return;
-
-        // DO_LEAST_PHPVER_SUPPORT 5.4 closure bindto
-        if ($callback instanceof \Closure && version_compare(phpversion(), '5.4.0') > 0) {
-            $callback = \Closure::bind(
-                $callback
-                , $this->_view
-                , get_class($this)
-            );
-        }
-
-        call_user_func($callback, $parentView, $parentView->parent(), $this);
-    }
-
-    /**
-     * @param mixed             $result Result of self::render
-     * @param DecorateViewModel $parent
-     */
-    function assertRenderResult($result, DecorateViewModel $parent)
-    {
-        if (null === $callback = $this->assertRenderResult)
-            return;
-
-        // DO_LEAST_PHPVER_SUPPORT 5.4 closure bindto
-        if ($callback instanceof \Closure && version_compare(phpversion(), '5.4.0') > 0) {
-            $callback = \Closure::bind(
-                $callback
-                , $this->_view
-                , get_class($this)
-            );
-        }
-
-        call_user_func($callback, $result, $parent, $parent->myRoot, $this);
-    }
-
-    /**
-     * Proxy all calls to wrapped ViewModel
-     * @return mixed
-     */
-    function __call($method, $arguments)
-    {
-        $r = call_user_func_array(array($this->_view, $method), $arguments);
-        if ($r === $this->_view)
-            // return instance of self if injected return itself
-            return $this;
-
-        return $r;
-    }
-
-    /**
-     * Parent
-     *
-     * @return null|DecorateViewModel
-     */
-    function parent()
-    {
-        return $this->myRoot;
+        return $this->__mapped_items[$tag]['view'];
     }
 
     /**
@@ -259,6 +220,27 @@ class DecorateViewModel
         return ($root === $this) ? null : $root;
     }
 
+    /**
+     * Parent
+     *
+     * @return null|DecorateViewModel
+     */
+    function parent()
+    {
+        return $this->parentDecorator;
+    }
+
+    /**
+     * Get Wrapped View Object
+     *
+     * @return iViewModel
+     */
+    function view()
+    {
+        return $this->viewWrap;
+    }
+
+
     // Wrapper:
     
     /**
@@ -273,7 +255,7 @@ class DecorateViewModel
      */
     function setFinal($flag = true)
     {
-        $this->_view->setFinal($flag);
+        $this->viewWrap->setFinal($flag);
         return $this;
     }
 
@@ -284,7 +266,45 @@ class DecorateViewModel
      */
     function isFinal()
     {
-        return $this->_view->isFinal();
+        return $this->viewWrap->isFinal();
+    }
+
+
+    // ..
+
+    /**
+     * @param mixed $result Result of self::render
+     * @param $parent
+     */
+    protected function _callAfterRenderDelegateParent($result, $parent)
+    {
+        if (null === $callback = $this->assertRenderResult)
+            return;
+
+        call_user_func($callback, $result, $parent, $this);
+    }
+
+    /**
+     * Proxy all calls to wrapped ViewModel
+     * @inheritdoc
+     *
+     * @return mixed|$this
+     */
+    function __call($method, $arguments)
+    {
+        if (! method_exists($this->viewWrap, $method) )
+            throw new \RuntimeException(sprintf(
+                'Call to undefined method %s::%s()'
+                , get_class($this->viewWrap)
+                , $method
+            ));
+
+        $r = call_user_func_array([$this->viewWrap, $method], $arguments);
+        if ($r === $this->viewWrap)
+            // return instance of self if injected return itself
+            return $this;
+
+        return $r;
     }
 
 
@@ -302,7 +322,7 @@ class DecorateViewModel
      */
     function with(array $options, $throwException = false)
     {
-        $this->_view->with($options, $throwException);
+        $this->viewWrap->with($options, $throwException);
         return $this;
     }
 
@@ -327,7 +347,7 @@ class DecorateViewModel
      */
     static function parseWith($optionsResource, array $_ = null)
     {
-        throw new \Exception('Not Implemented.');
+        throw new \Exception('Not Allowed.');
     }
 
     /**
@@ -339,28 +359,32 @@ class DecorateViewModel
      */
     static function isConfigurableWith($optionsResource)
     {
-        throw new \Exception('Not Implemented.');
+        throw new \Exception('Not Allowed.');
     }
 
 
     // ..
 
-    function __clone()
+    /**
+     * @return CollectionPriority
+     */
+    protected function _priorityQueue()
     {
-        $_f__clone_array = function($arr) use (&$_f__clone_array) {
-            foreach ($arr as &$v) {
-                if (is_array($v))
-                    $_f__clone_array($v);
-                elseif (is_object($v))
-                    $v = clone $v;
-            }
-        };
+        if (! $this->queue )
+            $this->queue = new CollectionPriority;
 
-        foreach($this as &$val) {
-            if (is_array($val))
-                $_f__clone_array($val);
-            elseif (is_object($val))
-                $val = clone $val;
-        }
+        return $this->queue;
+    }
+
+    /**
+     * Normalize Key
+     *
+     * @param string $key
+     *
+     * @return string
+     */
+    private function _normalize($key)
+    {
+        return strtolower($key);
     }
 }

@@ -6,6 +6,7 @@ use Poirot\Std\Mixin;
 use Poirot\View\Exception\exTemplateNotFound;
 use Poirot\View\Interfaces\iViewRenderer;
 
+
 /**
  * All isolated render area must extend this class
  *
@@ -22,15 +23,13 @@ use Poirot\View\Interfaces\iViewRenderer;
  */
 class RendererPhp
     extends Mixin // allow to define basic view helpers as callback methods
-    implements
-    iViewRenderer
+    implements iViewRenderer
 {
     protected $_curr__captureVars = null;
 
+
     /**
-     * Capture Included File Into This Object
-     *
-     * !! use absolute file path
+     * Capture File Into This Object and Render
      *
      * @param string $templateFullPathname File Path To Include
      * @param array $__vars
@@ -40,9 +39,6 @@ class RendererPhp
      */
     function capture($templateFullPathname, array $__vars = array())
     {
-        // TODO hierarchy variable pass to child not consumed successfully
-        // ability to call capture method again within included file-
-        // with parent/first call variables
         if ($this->_curr__captureVars === null)
             $this->_curr__captureVars = $__vars;
         else
