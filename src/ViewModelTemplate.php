@@ -77,7 +77,7 @@ class ViewModelTemplate
         ErrorStack::handleError(); // handle errors --------------------\
         #
         if (is_callable($renderer))
-            $result = call_user_func($renderer, $Template, $vars);
+            $result = call_user_func($renderer, $Template, $vars, $this);
         else
             ### its renderer instance
             $result = $renderer->capture($Template, $vars);

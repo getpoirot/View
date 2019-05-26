@@ -2,7 +2,6 @@
 namespace Poirot\View;
 
 use Poirot\Std\Struct\CollectionPriority;
-use Poirot\Std\Traits\tClone;
 use Poirot\View\Interfaces\iViewModel;
 
 
@@ -24,39 +23,31 @@ $viewTemplate
 
 $decorate = new P\View\DecorateViewModel(
     new P\View\ViewModelStatic(['content' => 'This is content of page'])
-    , function($result, $parent, $self) {
-    $parent->view()->setVariables(['content' => $result]);
-}
 );
+
+$decorate->onAfterViewModelRendered(function($result, $parent, $self) {
+    $parent->view()->setVariables(['content' => $result]);
+});
 
 $viewTemplate = new P\View\DecorateViewModel($viewTemplate);
 $viewTemplate->bind($decorate, 10, 'page_content');
 
 echo $viewTemplate->render();
+die;
 */
 
 
 /*
-// When we use two-step view; want to render PageView without Layout
+// want to render PageView without Layout
 //
-return function ($parent)
-{
-    $parent->setFinal();
-};
+$decorate = new P\View\DecorateViewModel(
+    new P\View\ViewModelStatic(['content' => 'This is content of page'])
+    , function($result, $parent, $self) {
+        $self->setFinal();
+    }
+);
 */
 
-/*
-// When we use two-step view; want to inject variables to PageView and Layout
-//
-return function ($parent) use ($var)
-{
-    /** @var \Poirot\View\ViewModelTemplate $parent * /
-    $parent->root()->setVariables([
-        'header_class' => ['fixed', 'fullwidth', 'dashboard'],
-        'no_footer'    => true,
-    ]);
-};
-*/
 
 /**
  * Add ability by wrap a ViewModel to bind to another viewModel
@@ -65,19 +56,16 @@ return function ($parent) use ($var)
 class DecorateViewModel
     implements iViewModel
 {
-    use tClone;
-
-
     /** @var iViewModel */
     protected $viewWrap;
 
     /** @var CollectionPriority */
     protected $queue;
-    protected $assertRenderResult;
-
     /** @var null|DecorateViewModel Root if it has! */
     protected $parentDecorator;
-    protected $childDecorator;
+
+    protected $onAfterViewModelRendered;
+    protected $onBeforeViewModelRender;
 
     protected $_c__isNowRendering = false;
     protected $__mapped_items;
@@ -87,17 +75,13 @@ class DecorateViewModel
      * ViewModelDecorateFeatures constructor.
      *
      * @param iViewModel $viewModel
-     * @param callable   $assertRenderResult f($result, $parent, $self)
      */
-    function __construct(iViewModel $viewModel, $assertRenderResult = null)
+    function __construct(iViewModel $viewModel)
     {
         $this->viewWrap = $viewModel;
         if ($viewModel instanceof DecorateViewModel && $viewModel->parent() === null)
             // Change parent of chain to this if undefined!!
             $viewModel->parentDecorator = $this;
-
-
-        $this->assertRenderResult = $assertRenderResult;
     }
 
 
@@ -123,12 +107,13 @@ class DecorateViewModel
         foreach(clone $this->_priorityQueue() as $bindView)
         {
             try {
-                // prepare bind view model result into parent model
-                $bindView->_callAfterRenderDelegateParent(
-                    $bindViewRender = $bindView->render()
-                    , $this
-                );
-
+                if (false !== $bindView->_callBeforeViewModelRender($this) ) {
+                    // prepare bind view model result into parent model
+                    $bindView->_callAfterViewModelRendered(
+                        $bindViewRender = $bindView->render()
+                        , $this
+                    );
+                }
             } catch (\Exception $e) {
                 ## set render flag to false, render job is done
                 $this->_c__isNowRendering = false;
@@ -147,6 +132,53 @@ class DecorateViewModel
 
 
         return $this->view()->render();
+    }
+
+    /**
+     * After View Model Rendered
+     *
+     * function(
+     *    $result    // render result
+     *  , $parent    // parent; decorator view who bind this view; binder
+     *  , $this      // self; view that result belong to it
+     * )
+     *
+     * @param callable $callable
+     *
+     * @return $this
+     * @throws \Exception
+     */
+    function onAfterViewModelRendered($callable)
+    {
+        if (! is_callable($callable) )
+            throw new \Exception('Callable Should Given.');
+
+
+        $this->onAfterViewModelRendered = $callable;
+        return $this;
+    }
+
+    /**
+     * Before Render View Model
+     *
+     * function(
+     *  , $parent    // parent; decorator view who bind this view; binder
+     *  , $this      // self; view that result belong to it
+     * )
+     *
+     * @param callable $callable
+     *
+     * @return $this
+     * @throws \Exception
+     */
+    function onBeforeViewModelRender($callable)
+    {
+        if (! is_callable($callable) )
+            throw new \Exception('Callable Should Given.');
+
+
+        $this->onBeforeViewModelRender = $callable;
+        return $this;
     }
 
     /**
@@ -180,10 +212,12 @@ class DecorateViewModel
         $viewModel->parentDecorator = $this;
         $this->_priorityQueue()->insert($viewModel, $priority);
 
-        $this->__mapped_items[$this->_normalize($tag)] = [ // allow override current tags
-            'priority' => $priority,
-            'view'     => $viewModel
-        ];
+        if ($tag !== null) {
+            $this->__mapped_items[$this->_normalize($tag)] = [ // allow override current tags
+                'priority' => $priority,
+                'view'     => $viewModel
+            ];
+        }
 
         return $this;
     }
@@ -273,15 +307,35 @@ class DecorateViewModel
     // ..
 
     /**
+     * @param $parent
+     */
+    protected function _callBeforeViewModelRender($parent)
+    {
+        if (null === $callback = $this->onBeforeViewModelRender)
+            return;
+
+        call_user_func(
+            $callback
+            , $parent    // parent; decorator view who bind this view; binder
+            , $this      // self; view that result belong to it
+        );
+    }
+
+    /**
      * @param mixed $result Result of self::render
      * @param $parent
      */
-    protected function _callAfterRenderDelegateParent($result, $parent)
+    protected function _callAfterViewModelRendered($result, $parent)
     {
-        if (null === $callback = $this->assertRenderResult)
+        if (null === $callback = $this->onAfterViewModelRendered)
             return;
 
-        call_user_func($callback, $result, $parent, $this);
+        call_user_func(
+            $callback
+            , $result    // render result
+            , $parent    // parent; decorator view who bind this view; binder
+            , $this      // self; view that result belong to it
+        );
     }
 
     /**
@@ -292,7 +346,7 @@ class DecorateViewModel
      */
     function __call($method, $arguments)
     {
-        if (! method_exists($this->viewWrap, $method) )
+        if (!$this->viewWrap instanceof DecorateViewModel && !method_exists($this->viewWrap, $method) )
             throw new \RuntimeException(sprintf(
                 'Call to undefined method %s::%s()'
                 , get_class($this->viewWrap)
@@ -386,5 +440,11 @@ class DecorateViewModel
     private function _normalize($key)
     {
         return strtolower($key);
+    }
+
+
+    function __clone()
+    {
+        $this->viewWrap = clone $this->viewWrap;
     }
 }
